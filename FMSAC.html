@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FMSAC Web — Manual FM + Custom Polarity + Beachball</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb;
+    --accent:#22d3ee; --accent2:#a78bfa; --ok:#34d399; --warn:#f59e0b; --err:#ef4444;
+    --card:#0b1220; --border:#1f2937;
+    --np1:#34d399; --np2:#a78bfa; --pt:#ef4444; --tt:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:linear-gradient(180deg,#0a0f1d 0%, #0f172a 20%, #0f172a 100%);
+       color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, sans-serif;}
+  .wrap{max-width:1240px; margin:24px auto; padding:0 16px;}
+  h1{font-size:24px; margin:0 0 8px;}
+  .subtitle{color:var(--muted); margin-bottom:20px}
+  .grid{display:grid; grid-template-columns:1.05fr 0.95fr; gap:16px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 14px 10px}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .col{display:flex; flex-direction:column; gap:6px}
+  label{font-size:12px; color:var(--muted)}
+  input[type="text"], input[type="number"], textarea, select{
+    background:#0a1220; border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:8px 10px; outline:none; min-width:0;
+  }
+  input[type="file"]{color:var(--muted)}
+  button{background:linear-gradient(90deg,var(--accent), var(--accent2)); color:#0b1220;
+         border:0; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600;}
+  button.secondary{ background:#111827; color:var(--text); border:1px solid var(--border); }
+  button.ghost{ background:transparent; color:var(--muted); border:1px dashed var(--border); }
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  thead th{position:sticky; top:0; background:var(--panel); color:#cbd5e1; text-align:left; padding:8px; border-bottom:1px solid var(--border)}
+  tbody td{padding:8px; border-bottom:1px dashed var(--border); color:#d1d5db}
+  tbody tr:hover{background:#0c1424}
+  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border); background:#0c1424; color:#cbd5e1}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .pill{display:inline-flex; padding:4px 8px; background:#0c1424; border:1px solid var(--border); border-radius:999px; gap:6px; align-items:center}
+  .stereo-wrap{position:relative; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:8px}
+  canvas{display:block; width:100%; height:auto; background:#0a1220; border-radius:12px}
+  .small{font-size:12px; color:var(--muted)}
+  .right{margin-left:auto}
+  .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px} .mt20{margin-top:20px}
+  .legend{position:absolute; top:8px; left:8px; padding:6px 8px; background:#0b1220bb; border:1px solid var(--border); border-radius:8px; font-size:12px; color:#cbd5e1}
+  .legend span{display:inline-block; width:12px; height:2px; margin-right:6px; vertical-align:middle}
+  .legend .np1{background:var(--np1)} .legend .np2{background:var(--np2)}
+  .legend .pp{background:var(--pt); height:6px; width:6px; border-radius:50%; display:inline-block; margin-right:6px}
+  .legend .tt{background:var(--tt); height:6px; width:6px; border-radius:50%; display:inline-block; margin-right:6px}
+
+  /* Picker Modal Styles */
+  .modal{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.95); z-index:1000; display:none; align-items:center; justify-content:center;}
+  .modal.show{display:flex;}
+  .picker{display:flex; width:95%; height:90%; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+  .picker .list{width:280px; border-right:1px solid var(--border); overflow-y:auto; background:var(--panel);}
+  .picker .list .item{padding:12px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.2s;}
+  .picker .list .item:hover{background:#0c1424;}
+  .picker .list .item.active{background:var(--accent); color:#0b1220; font-weight:600;}
+  .picker .list .item .id{font-weight:500;}
+  .picker .list .item .meta{font-size:11px; color:var(--muted); margin-top:2px;}
+  .picker .list .item.active .meta{color:#0b1220;}
+  .picker .plot{flex:1; display:flex; flex-direction:column;}
+  .picker .plot .toolbar{display:flex; align-items:center; padding:12px; border-bottom:1px solid var(--border); background:var(--panel); gap:8px; flex-wrap:wrap;}
+  .picker .plot .toolbar .btn{padding:6px 12px; background:var(--card); border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer; font-size:12px;}
+  .picker .plot .toolbar .btn.primary{background:linear-gradient(90deg,var(--accent), var(--accent2)); color:#0b1220;}
+  .picker .plot .toolbar .status{font-size:11px; color:var(--muted); margin-left:auto;}
+  .picker .plot canvas{flex:1; margin:12px; border-radius:8px;}
+
+  /* Rake Results Styles */
+  #rake-results.card { margin-top: 10px; }
+  #rake-results table { width: 100%; border-collapse: collapse; }
+  #rake-results th, #rake-results td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12.5px; }
+  #rake-results thead th { text-align: left; opacity: .95; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FMSAC Web</h1>
+  <div class="subtitle">Polarity symbols customized • Manual nodal-plane picking • Reset • Beachball • P/T • PNG export.</div>
+
+  <div class="grid">
+    <div class="col" style="gap:16px">
+      <div class="card">
+        <div class="row">
+          <div class="col">
+            <label>Velocity model (vmodel.dat)</label>
+            <input id="vmodelFile" type="file" accept=".dat,.txt"/>
+            <div class="small">Format: <code>depth vp [vs density]</code></div>
+          </div>
+          <div class="col">
+            <label>SAC files</label>
+            <input id="sacFiles" type="file" multiple accept=".SAC,.sac"/>
+            <div class="small">Reads headers + float32 data; uses KNETWK and KSTNM when present.</div>
+          </div>
+          <div class="right">
+            <button id="btnPick" class="secondary">Pick Polarities</button>
+            <button id="btnCompute">Compute Angles</button>
+            <button id="btnExport" class="ghost">Export Table</button>
+          </div>
+        </div>
+        <div class="row mt8">
+          <span class="badge">Event</span>
+          <div class="row">
+            <label>EVLA</label><input id="evla" type="number" step="0.0001" style="width:120px">
+            <label>EVLO</label><input id="evlo" type="number" step="0.0001" style="width:120px">
+            <label>EVDP(km)</label><input id="evdp" type="number" step="0.1" style="width:100px">
+          </div>
+          <div class="right pill"><span class="small">SAC files</span><span id="sacCount" class="small">0</span></div>
+        </div>
+        <div class="row mt8">
+          <span class="badge">Diagnostics</span>
+          <span id="diag" class="small">No run yet.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <span class="badge">Stations</span>
+          <span class="small">Polarity column is linked to your seismogram picks.</span>
+        </div>
+        <div class="mt8" style="max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:10px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>ID</th><th>STLA</th><th>STLO</th><th>AZ</th><th>BAZ</th><th>GCARC</th>
+                <th>Dist(km)</th><th>TK(°)</th><th>P_time(s)</th><th>Pol</th><th>Method</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="gap:16px">
+      <div class="card stereo-wrap">
+        <div class="row" style="align-items:flex-end">
+          <span class="badge">Upper-Hemisphere Stereonet</span>
+          <div class="right small" style="display:flex; gap:10px; align-items:center">
+            <label class="small"><input id="showBeachball" type="checkbox" checked> beachball</label>
+            <label class="small"><input id="showPT" type="checkbox" checked> show P/T</label>
+            <button id="btnExportPNG" class="ghost">Export PNG</button>
+          </div>
+        </div>
+        <div class="legend"><span class="np1"></span>NP1 &nbsp;&nbsp; <span class="np2"></span>NP2 &nbsp;&nbsp; <span class="pp"></span>P &nbsp;&nbsp; <span class="tt"></span>T</div>
+        <canvas id="stereo" width="800" height="800"></canvas>
+        <div id="manualHint" class="small" style="position:absolute; bottom:8px; left:12px; color:#94a3b8"></div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="align-items:flex-start">
+          <div class="col" style="flex:1">
+            <div class="row">
+              <span class="badge">Focal Mechanism</span>
+              <div class="right" style="display:flex; gap:6px">
+                <button id="btnManual" class="ghost">Manual Select</button>
+                <button id="btnResetFM" class="ghost">Reset</button>
+                <button id="btnSolveFM" class="secondary">Solve</button>
+                <button id="btnExportFM" class="ghost">Export FM</button>
+              </div>
+            </div>
+            <div class="row mt8">
+              <label>Grid (°)</label>
+              <input id="gStrike" type="number" value="10" min="1" max="30" step="1" style="width:70px">
+              <input id="gDip"    type="number" value="5"  min="1" max="30" step="1" style="width:70px">
+              <input id="gRake"   type="number" value="10" min="1" max="60" step="1" style="width:70px">
+              <label class="small"><input id="refine" type="checkbox" checked> refine near best</label>
+            </div>
+            <div class="row mt8">
+              <span class="small">Manual mode: click NP1 pole (fault normal), then NP2 pole (slip). We'll orthogonalize & update SDR.</span>
+            </div>
+          </div>
+          <div class="col" style="flex:1">
+            <div class="row"><span class="badge">Best (NP1)</span></div>
+            <div class="row small mt8" id="np1">—</div>
+            <div class="row"><span class="badge">Aux (NP2)</span></div>
+            <div class="row small mt8" id="np2">—</div>
+            <div class="row mt8 small" id="fmscore">—</div>
+            <div class="row"><span class="badge">P-axis</span></div>
+            <div class="row small mt8" id="p-axis">—</div>
+            <div class="row"><span class="badge">T-axis</span></div>
+            <div class="row small mt8" id="t-axis">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for picker -->
+<div class="modal" id="modal">
+  <div class="picker">
+    <div class="list" id="pickList"></div>
+    <div class="plot">
+      <div class="toolbar">
+        <button class="btn" id="btnPrev">◀ Prev</button>
+        <button class="btn" id="btnNext">Next ▶</button>
+        <div class="row" style="gap:6px; margin-left:8px">
+          <span class="small">Filter:</span>
+          <label class="small">HP(Hz)</label><input id="hpHz" type="number" step="0.1" style="width:70px" value="0.5">
+          <label class="small">LP(Hz)</label><input id="lpHz" type="number" step="0.1" style="width:70px" value="15">
+          <label class="small"><input id="doFilt" type="checkbox" checked> apply</label>
+          <label class="small"><input id="doNorm" type="checkbox" checked> normalize</label>
+        </div>
+        <div class="right"></div>
+        <button class="btn" id="btnSetP">Set P</button>
+        <button class="btn" id="btnDelete">Delete</button>
+        <span class="status" id="pickStatus">Keys: + / - / ?, ←/→, P, Esc</span>
+        <button class="btn primary" id="btnClose">Done</button>
+      </div>
+      <canvas id="pickCanvas" width="820" height="500"></canvas>
+      <div class="row mt8" style="gap:10px; padding:0 12px 12px;">
+        <div class="small">P at <span id="pTime">–</span> s. Suggestion: <span id="pSuggest">–</span></div>
+        <button class="btn" id="btnAccept">Accept Suggestion</button>
+        <button class="btn" id="btnAutoPickAll">Auto Pick All</button>
+        <div class="right"></div>
+        <button class="btn" id="btnPolPlus">+</button>
+        <button class="btn" id="btnPolMinus">−</button>
+        <button class="btn" id="btnPolUnknown">?</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Utilities ---------- */
+const R_EARTH = 6371.0;
+function toRad(d){return d*Math.PI/180} function toDeg(r){return r*180/Math.PI}
+function clamp(v,a,b){return Math.max(a, Math.min(b, v));}
+function haversineKm(lat1, lon1, lat2, lon2){
+  const φ1=toRad(lat1), φ2=toRad(lat2), dφ=toRad(lat2-lat1), dλ=toRad(lon2-lon1);
+  const A = Math.sin(dφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(dλ/2)**2;
+  return 2*R_EARTH*Math.asin(Math.sqrt(A));
+}
+function azimuth(lat1, lon1, lat2, lon2){
+  const φ1=toRad(lat1), φ2=toRad(lat2), Δλ=toRad(lon2-lon1);
+  const x = Math.sin(Δλ)*Math.cos(φ2);
+  const y = Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  let az = toDeg(Math.atan2(x,y)); if(az<0) az+=360; return az;
+}
+function fmt(x,n){return (x==null||!isFinite(x))? "" : Number(x).toFixed(n);}
+function downloadFile(name, content){
+  const blob = new Blob([content], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+function concatFloat32(a, b){
+  const c = new Float32Array(a.length + b.length);
+  c.set(a);
+  c.set(b, a.length);
+  return c;
+}
+
+/* ---------- Velocity model ---------- */
+let VMODEL = [];
+function parseVModel(text){
+  const rows=[];
+  text.split(/\r?\n/).forEach(line=>{
+    const t=line.trim(); if(!t||t.startsWith('#')) return;
+    const p = t.split(/\s+/).map(Number);
+    if(p.length>=2){
+      const depth=p[0], vp=p[1], vs=p[2]||vp/1.73, rho=p[3]||2.7;
+      rows.push({depth, vp, vs, rho});
+    }
+  });
+  rows.sort((a,b)=>a.depth-b.depth);
+  VMODEL = rows;
+}
+function vpAtDepth(depth){
+  if(!VMODEL.length) return 6.0;
+  if(depth<=VMODEL[0].depth) return VMODEL[0].vp;
+  for(let i=0;i<VMODEL.length-1;i++){
+    const a=VMODEL[i], b=VMODEL[i+1];
+    if(depth>=a.depth && depth<b.depth){
+      const t=(depth-a.depth)/(b.depth-a.depth);
+      return a.vp + t*(b.vp-a.vp);
+    }
+  }
+  return VMODEL[VMODEL.length-1].vp;
+}
+
+/* ---------- Jansky-style takeoff ---------- */
+function distanceFromAlpha(alphaDeg, depthKm){
+  const r0 = R_EARTH - depthKm;
+  const v0 = vpAtDepth(depthKm);
+  const alpha0 = toRad(alphaDeg);
+  const p = r0*Math.sin(alpha0)/v0;
+  let r=r0, theta=0;
+  const ds=5.0, stepsMax=20000;
+  function derivs(r,theta){
+    const z = Math.max(0, R_EARTH - r);
+    const v = vpAtDepth(z);
+    const pv_over_r = (p*v)/r;
+    if(pv_over_r>0.999999) return [NaN,NaN];
+    const sqrtTerm = Math.sqrt(1 - pv_over_r*pv_over_r);
+    return [sqrtTerm, (p*v)/(r*r)];
+  }
+  for(let n=0;n<stepsMax && r<R_EARTH; n++){
+    const [k1r,k1t] = derivs(r,theta); if(!isFinite(k1r)) return NaN;
+    const [k2r,k2t] = derivs(r+0.5*ds*k1r, theta+0.5*ds*k1t); if(!isFinite(k2r)) return NaN;
+    const [k3r,k3t] = derivs(r+0.5*ds*k2r, theta+0.5*ds*k2t); if(!isFinite(k3r)) return NaN;
+    const [k4r,k4t] = derivs(r+ds*k3r, theta+ds*k3t); if(!isFinite(k4r)) return NaN;
+    r     += (ds/6)*(k1r+2*k2r+2*k3r+k4r);
+    theta += (ds/6)*(k1t+2*k2t+2*k3t+k4t);
+  }
+  return toDeg(theta)*111.32;
+}
+function takeoffAngle(distanceKm, depthKm){
+  try{
+    const f = (a)=>distanceFromAlpha(a, depthKm);
+    const grid=[]; const N=36;
+    for(let i=0;i<=N;i++){ const a=i*(180/N); grid.push({a,d:f(a)}); }
+    const clean = grid.filter(g=>isFinite(g.d));
+    if(clean.length<2) throw new Error("no rays");
+    clean.sort((u,v)=>Math.abs(u.d-distanceKm)-Math.abs(v.d-distanceKm));
+    const best = clean[0];
+    const sorted = clean.slice().sort((u,v)=>u.a-v.a);
+    let idx = sorted.findIndex(x=>x.a===best.a), lo, hi;
+    const sign = (x)=> x>=distanceKm?1:-1;
+    let s0 = sign(best.d);
+    for(let i=idx-1;i>=0;i--){ const s=sign(sorted[i].d); if(s!==s0){ lo=sorted[i].a; hi=best.a; break; } }
+    if(lo===undefined){ for(let i=idx+1;i<sorted.length;i++){ const s=sign(sorted[i].d); if(s!==s0){ lo=best.a; hi=sorted[i].a; break; } } }
+    if(lo===undefined) throw new Error("no bracket");
+    let fla=f(lo), fha=f(hi);
+    for(let it=0; it<40; it++){
+      const mid=0.5*(lo+hi), fmid=f(mid);
+      if(Math.abs(fmid-distanceKm)<0.2) return {angle:mid, method:"jansky"};
+      const sL=(fla-distanceKm), sM=(fmid-distanceKm);
+      if(sL*sM<=0){ hi=mid; fha=fmid; } else { lo=mid; fla=fmid; }
+    }
+    return {angle:0.5*(lo+hi), method:"jansky"};
+  }catch(e){
+    if(depthKm<=0) return {angle:90, method:"fallback"};
+    const inc = Math.atan2(distanceKm, depthKm);
+    return {angle:180 - toDeg(inc), method:"fallback"};
+  }
+}
+
+/* ---------- Filters ---------- */
+function lowpassFirstOrder(x, dt, fc){
+  if(!fc || fc<=0) return x.slice();
+  const RC = 1/(2*Math.PI*fc), alpha = dt/(RC+dt);
+  const y = new Float32Array(x.length);
+  let out = x[0]; y[0]=out;
+  for(let i=1;i<x.length;i++){ out += alpha*(x[i]-out); y[i] = out; }
+  return y;
+}
+function highpassFirstOrder(x, dt, fc){
+  if(!fc || fc<=0) return x.slice();
+  const RC = 1/(2*Math.PI*fc), alpha = RC/(RC+dt);
+  const y = new Float32Array(x.length);
+  let prevX = x[0], out = x[0]; y[0]=0;
+  for(let i=1;i<x.length;i++){ out = alpha*(out + x[i] - prevX); y[i] = out; prevX = x[i]; }
+  return y;
+}
+function bandpass(x, dt, hp, lp){
+  let y = x; if(hp && hp>0) y = highpassFirstOrder(y, dt, hp); if(lp && lp>0) y = lowpassFirstOrder(y, dt, lp); return y;
+}
+
+/* ---------- SAC parser ---------- */
+const FIDX = { DELTA:0, B:5, E:6, O:7, A:8, STLA:31, STLO:32, EVLA:35, EVLO:36, EVDP:38, DIST:50, AZ:51, BAZ:52, GCARC:53 };
+const SAC_UNDEF = -12345.0; const HEADER_SIZES = [632, 652];
+function cleanVal(x){ return (!isFinite(x) || Math.abs(x-SAC_UNDEF)<1e-3) ? null : x; }
+function readCharFields(buffer, withLogicals){
+  const start = 70*4 + 40*4 + (withLogicals? 5*4 : 0);
+  const dv = new DataView(buffer, start, 24*8);
+  const arr = [];
+  for(let i=0;i<24;i++){ let s=""; for(let k=0;k<8;k++){ s += String.fromCharCode(dv.getUint8(i*8+k)); } arr.push(s.replace(/\x00/g,'').trim()); }
+  return arr;
+}
+function parseSac(buffer){
+  const dv = new DataView(buffer);
+  function readFloat(i, le){ return dv.getFloat32(i*4, le); }
+  function readInt(i, le){ const byteOffset = 70*4 + i*4; return le ? dv.getInt32(byteOffset, true) : dv.getInt32(byteOffset, false); }
+  const cand = [true,false].map(le=>{
+    const delta = readFloat(FIDX.DELTA, le);
+    const stla = readFloat(FIDX.STLA, le);
+    const stlo = readFloat(FIDX.STLO, le);
+    const evla = readFloat(FIDX.EVLA, le);
+    const evlo = readFloat(FIDX.EVLO, le);
+    const evdp = readFloat(FIDX.EVDP, le);
+    const plaus = (delta>1e-6 && delta<1e4 && Math.abs(stla)<=90 && Math.abs(stlo)<=360 && Math.abs(evla)<=90 && Math.abs(evlo)<=360);
+    return {le, delta, stla, stlo, evla, evlo, evdp, dist: readFloat(FIDX.DIST, le), az: readFloat(FIDX.AZ, le), baz: readFloat(FIDX.BAZ, le), gcarc: readFloat(FIDX.GCARC, le), plaus};
+  });
+  const pick = cand.find(c=>c.plaus) || cand[0];
+  const NPTS_INDEX = 9; let npts = readInt(NPTS_INDEX, pick.le);
+  let dataOffset = null;
+  for(const hsz of HEADER_SIZES){ const remain = dv.byteLength - hsz; if(remain >= npts*4){ dataOffset = hsz; break; } }
+  if(dataOffset===null){ const remain = dv.byteLength - 632; dataOffset = 632; npts = Math.max(0, Math.floor(remain/4)); }
+  let kstnm="", knetwk="", kcmpnm="";
+  try{
+    const charsNoLog = readCharFields(buffer, false); const charsLog = readCharFields(buffer, true);
+    const candidates = [{kst: charsNoLog[0]||"", net: charsNoLog[21]||""},{kst: charsLog[0]||"", net: charsLog[21]||""}];
+    const chosen = candidates.find(c=>c.kst && c.kst.length>0) || candidates[0];
+    kstnm = chosen.kst; knetwk = chosen.net;
+    kcmpnm = (charsNoLog[20] || charsLog[20] || "").trim();
+  }catch(_){}
+  const f32 = new Float32Array(buffer, dataOffset, npts);
+  return { littleEndian: pick.le, npts, delta: pick.delta, b: readFloat(FIDX.B, pick.le), e: readFloat(FIDX.E, pick.le),
+           evla: cleanVal(pick.evla), evlo: cleanVal(pick.evlo), evdp: cleanVal(pick.evdp),
+           stla: cleanVal(pick.stla), stlo: cleanVal(pick.stlo),
+           az: cleanVal(pick.az), baz: cleanVal(pick.baz), dist_km: cleanVal(pick.dist), gcarc: cleanVal(pick.gcarc),
+           data: f32, kstnm, knetwk, kcmpnm };
+}
+
+/* ---------- Data model ---------- */
+const rows = []; // per-station
+let EV = {evla:null, evlo:null, evdp:null};
+let FM_SOLUTION = null; // cache last focal mech solution
+let MANUAL_MODE = false;
+let MANUAL_SOL = null; // manual-mode solution override
+let FILL_T_MATCH = false; // for beachball fill alignment
+// Manual selection state (A,B define Plane1; C + Pole1 define Plane2)
+let MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+let MANUAL_POINTS = [];
+
+function setDiag(html){ document.getElementById('diag').innerHTML = html; }
+function cyclePol(p){ return p==="?"?"+":(p==="+")?"−":"?"; }
+
+function renderTable(){
+  const tb = document.getElementById('tbody'); tb.innerHTML="";
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    function td(v){ const e=document.createElement('td'); e.textContent=v; return e; }
+    tr.appendChild(td(r.id));
+    tr.appendChild(td(fmt(r.stla,4)));
+    tr.appendChild(td(fmt(r.stlo,4)));
+    tr.appendChild(td(fmt(r.az,1)));
+    tr.appendChild(td(fmt(r.baz,1)));
+    tr.appendChild(td(fmt(r.gcarc,2)));
+    tr.appendChild(td(fmt(r.dist_km,1)));
+    tr.appendChild(td(isFinite(r.tk_plot)?fmt(r.tk_plot,1):"—"));
+    tr.appendChild(td(isFinite(r.ptime)?fmt(r.ptime,2):"—"));
+    const pol = document.createElement('td'); pol.textContent = r.pol || "?"; pol.style.cursor="pointer";
+    pol.addEventListener('click', ()=>{ r.pol = cyclePol(r.pol); pol.textContent=r.pol; drawStereo(); });
+    tr.appendChild(pol);
+    const m = document.createElement('td'); m.innerHTML = r.method==="jansky" ? '<span class="badge" style="color:var(--accent)">jansky</span>' : '<span class="badge" style="color:var(--warn)">fallback</span>'; tr.appendChild(m);
+    tb.appendChild(tr);
+  });
+  document.getElementById('sacCount').textContent = String(rows.length);
+  drawStereo();
+}
+
+function recompute(){
+  if(EV.evla==null||EV.evlo==null||EV.evdp==null){ setDiag('Set EVLA/EVLO/EVDP.'); return; }
+  let nJ=0, nF=0;
+  rows.forEach(r=>{
+    if(r.az==null || r.baz==null){
+      r.az  = azimuth(EV.evla, EV.evlo, r.stla, r.stlo);
+      r.baz = azimuth(r.stla, r.stlo, EV.evla, EV.evlo);
+    }
+    if(r.dist_km==null){
+      r.dist_km = haversineKm(EV.evla, EV.evlo, r.stla, r.stlo);
+      r.gcarc = r.dist_km/111.32;
+    }else{
+      r.gcarc = (r.gcarc!=null? r.gcarc : r.dist_km/111.32);
+    }
+    const {angle, method} = takeoffAngle(r.dist_km, EV.evdp);
+    r.tk = angle; r.method = method;
+    if(method==="jansky") nJ++; else nF++;
+    if(r.tk>90){ r.tk_plot=180-r.tk; r.az_used=(r.az+180)%360; } else { r.tk_plot=r.tk; r.az_used=r.az; }
+    const vavg = vpAtDepth(Math.max(0, EV.evdp*0.5));
+    r.ptime = r.dist_km / Math.max(0.1, vavg);
+  });
+  setDiag(`Solved ${rows.length} station(s): <span class="ok">${nJ} Jansky</span>, <span class="warn">${nF} Fallback</span>.`);
+  renderTable();
+}
+
+/* ---------- Stereonet ---------- */
+const stereo = document.getElementById('stereo');
+
+// High-DPI scaling for crisp drawing
+function setupHiDPICanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = {w: canvas.width, h: canvas.height};
+  canvas.width = Math.round(rect.w * dpr);
+  canvas.height = Math.round(rect.h * dpr);
+  canvas.style.width = rect.w + "px";
+  canvas.style.height = rect.h + "px";
+  const c = canvas.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  return c;
+}
+
+const ctx = setupHiDPICanvas(stereo);
+let view = { cx: stereo.width/2, cy: stereo.height/2, R: Math.min(stereo.width,stereo.height)*0.42, zoom:1, panX:0, panY:0 };
+let dragging=false, last={x:0,y:0};
+
+let stereoCursor = {x:null,y:null, az:null, tk:null};
+stereo.addEventListener('mousemove', (e)=>{
+  const rect = stereo.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const cx=view.cx+view.panX, cy=view.cy+view.panY;
+  const dx=x - cx, dy=y - cy;
+  const R = view.R*view.zoom;
+  if(Math.hypot(dx,dy) <= R){
+    const a = azTkFromXY(dx, dy);
+    stereoCursor = {x,y, az:a.az, tk:a.tk};
+  } else {
+    stereoCursor = {x:null,y:null, az:null, tk:null};
+  }
+  drawStereo();
+});
+stereo.addEventListener('mouseleave', ()=>{ stereoCursor={x:null,y:null, az:null, tk:null}; drawStereo(); });
+
+
+function xyFromAzTakeoff(azDeg, tkPlotDeg){
+  // Compass azimuth: 0°=North (up), 90°=East (right), clockwise
+  const az = toRad(azDeg), take = toRad(tkPlotDeg);
+  const rr = view.R*Math.SQRT2*Math.sin(take/2);
+  return { x: rr*Math.sin(az), y: -rr*Math.cos(az) };
+}
+function azTkFromXY(dx, dy){
+  // Inverse of xyFromAzTakeoff for compass convention (y positive downwards)
+  const rr = Math.hypot(dx, dy);
+  const t = 2*Math.asin( rr / (view.R*Math.SQRT2) );
+  const az = (toDeg(Math.atan2(dx, -dy)) + 360) % 360;
+  return { az, tk: toDeg(t) };
+}
+
+function jacobiEigenSym3(M, iters=50){
+  let a = [[M[0][0], M[0][1], M[0][2]],[M[1][0], M[1][1], M[1][2]],[M[2][0], M[2][1], M[2][2]]];
+  let v = [[1,0,0],[0,1,0],[0,0,1]];
+  function rotate(p,q){
+    if(Math.abs(a[p][q]) < 1e-15) return;
+    const app=a[p][p], aqq=a[q][q], apq=a[p][q];
+    const phi = 0.5*Math.atan2(2*apq, (aqq-app));
+    const c=Math.cos(phi), s=Math.sin(phi);
+    const app2 = c*c*app - 2*s*c*apq + s*s*aqq;
+    const aqq2 = s*s*app + 2*s*c*apq + c*c*aqq;
+    a[p][p]=app2; a[q][q]=aqq2; a[p][q]=a[q][p]=0;
+    for(let r=0;r<3;r++){
+      if(r!==p && r!==q){
+        const arp=a[r][p], arq=a[r][q];
+        a[r][p]=a[p][r]= c*arp - s*arq;
+        a[r][q]=a[q][r]= s*arp + c*arq;
+      }
+      const vrp=v[r][p], vrq=v[r][q];
+      v[r][p]= c*vrp - s*vrq;
+      v[r][q]= s*vrp + c*vrq;
+    }
+  }
+  for(let k=0;k<iters;k++){
+    let p=0,q=1; let max=Math.abs(a[0][1]);
+    if(Math.abs(a[0][2])>max){ p=0;q=2;max=Math.abs(a[0][2]); }
+    if(Math.abs(a[1][2])>max){ p=1;q=2;max=Math.abs(a[1][2]); }
+    if(max<1e-12) break;
+    rotate(p,q);
+  }
+  const evals=[a[0][0],a[1][1],a[2][2]];
+  const evecs=[[v[0][0],v[1][0],v[2][0]],[v[0][1],v[1][1],v[2][1]],[v[0][2],v[1][2],v[2][2]]];
+  return {evals, evecs};
+}
+
+/* --- Beachball fill --- */
+function drawBeachball(M){
+  const show = document.getElementById('showBeachball').checked;
+  if(!show || !M) return;
+  const R = view.R*view.zoom;
+  const cx = view.cx+view.panX, cy=view.cy+view.panY;
+  const step = 3;
+  ctx.save();
+  for(let y=Math.round(cy-R); y<=Math.round(cy+R); y+=step){
+    for(let x=Math.round(cx-R); x<=Math.round(cx+R); x+=step){
+      const dx=x-cx, dy=y-cy;
+      const rr = Math.hypot(dx,dy);
+      if(rr>R) continue;
+      const {az, tk} = azTkFromXY(dx, dy);
+      const th = toRad(tk);
+      const n = [ Math.sin(th)*Math.sin(toRad(az)), Math.sin(th)*Math.cos(toRad(az)), -Math.cos(th) ];
+      const Mn = [ M[0][0]*n[0] + M[0][1]*n[1] + M[0][2]*n[2],
+                   M[1][0]*n[0] + M[1][1]*n[1] + M[1][2]*n[2],
+                   M[2][0]*n[0] + M[2][1]*n[1] + M[2][2]*n[2] ];
+      const A = n[0]*Mn[0] + n[1]*Mn[1] + n[2]*Mn[2];
+      ctx.fillStyle = A > 0 ? "#90EE90" : "white";
+      ctx.fillRect(x, y, step, step);
+    }
+  }
+  ctx.restore();
+}
+
+/* --- FM math helpers --- */
+class FocalMechanismSolver{
+  constructor(picks){
+    this.picks = picks.filter(p=>p && (p.pol==='+' || p.pol==='−') && isFinite(p.az) && isFinite(p.tk));
+  }
+  static dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+  static cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  static norm(a){ const L=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/L,a[1]/L,a[2]/L]; }
+  static rayVecNED(azDeg, tkDeg){ const az=toRad(azDeg), th=toRad(tkDeg); const up=Math.cos(th), sn=Math.sin(th); return [ sn*Math.sin(az), sn*Math.cos(az), -up ]; }
+  static sdrToNS(strikeDeg, dipDeg, rakeDeg){
+    const φ = toRad(strikeDeg), δ = toRad(dipDeg), λ = toRad(rakeDeg);
+    const n = [ -Math.sin(δ)*Math.sin(φ),  Math.sin(δ)*Math.cos(φ), -Math.cos(δ) ];
+    const s = [  Math.cos(λ)*Math.cos(φ) + Math.sin(λ)*Math.cos(δ)*Math.sin(φ),
+                 Math.cos(λ)*Math.sin(φ) - Math.sin(λ)*Math.cos(δ)*Math.cos(φ),
+                 Math.sin(λ)*Math.sin(δ) ];
+    return {n, s};
+  }
+  static nsToSdr(n_in, s_in){
+    const n = this.norm(n_in), s = this.norm(s_in);
+    let dip = Math.acos(Math.max(-1, Math.min(1, -n[2])));
+    dip = Math.max(0, Math.min(Math.PI/2, dip));
+    let t = this.cross([0,0,1], n);
+    if(Math.hypot(t[0], t[1]) < 1e-8) t = [0,1,0];
+    t = this.norm([t[0], t[1], 0]);
+    let d = this.cross(n, t);
+    if(d[2] < 0){ t = [-t[0], -t[1], -t[2]]; d = this.cross(n, t); }
+    t = this.norm(t); d = this.norm(d);
+    // Use azimuth convention: clockwise from North. With components (x=East, y=North), az = atan2(E, N)
+    let strike = Math.atan2(t[0], t[1]); if(strike < 0) strike += 2*Math.PI;
+    const rake = Math.atan2( this.dot(s, d), this.dot(s, t) );
+    return { strike: toDeg(strike), dip: toDeg(dip), rake: toDeg(rake) };
+  }
+  static sdrToMoment(strikeDeg, dipDeg, rakeDeg){
+    const {n, s} = this.sdrToNS(strikeDeg, dipDeg, rakeDeg);
+    const M = [[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) M[i][j] = s[i]*n[j] + n[i]*s[j];
+    return {M, n, s};
+  }
+  static amplitude(M, nvec){
+    const Mn = [ M[0][0]*nvec[0] + M[0][1]*nvec[1] + M[0][2]*nvec[2],
+                 M[1][0]*nvec[0] + M[1][1]*nvec[1] + M[1][2]*nvec[2],
+                 M[2][0]*nvec[0] + M[2][1]*nvec[1] + M[2][2]*nvec[2] ];
+    return nvec[0]*Mn[0] + nvec[1]*Mn[1] + nvec[2]*Mn[2];
+  }
+  scoreStrikeDipRake(strike, dip, rake){
+    const {M} = FocalMechanismSolver.sdrToMoment(strike, dip, rake);
+    let correct=0, wrong=0, nodal=0, used=0; const eps = 1e-6;
+    for(const p of this.picks){
+      const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+      const A = FocalMechanismSolver.amplitude(M, nvec);
+      if(Math.abs(A) < eps){ nodal++; continue; }
+      const sign = (A>0)? '+' : '−';
+      if(sign === p.pol) correct++; else wrong++;
+      used++;
+    }
+    const score = correct - wrong;
+    return {score, correct, wrong, nodal, used};
+  }
+  solve(gridStrike=10, gridDip=5, gridRake=10, doRefine=true){
+    if(this.picks.length === 0) return null;
+    let best = {score:-1e9, strike:0, dip:45, rake:0, correct:0, wrong:0, nodal:0, used:0};
+    const consider = (S,D,R)=>{ const r=this.scoreStrikeDipRake(S,D,R); if(r.score>best.score){ best={...r, strike:S, dip:D, rake:R}; } };
+    for(let S=0; S<360; S+=gridStrike){
+      for(let D=gridDip; D<=90; D+=gridDip){
+        for(let R=-180; R<180; R+=gridRake){
+          consider(S,D,R);
+        }
+      }
+    }
+    if(!doRefine) return this.finalize(best);
+    const s0=best.strike, d0=best.dip, r0=best.rake;
+    const s1=Math.max(0,s0-2*gridStrike), s2=Math.min(359.9,s0+2*gridStrike);
+    const d1=Math.max(1,d0-2*gridDip),     d2=Math.min(89, d0+2*gridDip);
+    const r1=r0-2*gridRake,                r2=r0+2*gridRake;
+    const ds=Math.max(2, Math.round(gridStrike/2));
+    const dd=Math.max(2, Math.round(gridDip/2));
+    const dr=Math.max(2, Math.round(gridRake/2));
+    for(let S=s1; S<=s2; S+=ds){ for(let D=d1; D<=d2; D+=dd){ for(let R=r1; R<=r2; R+=dr){ let SS=(S+360)%360, RR=((R+180)%360)-180; consider(SS,D,RR); } } }
+    for(let S=best.strike-4; S<=best.strike+4; S+=1){
+      for(let D=Math.max(1,best.dip-3); D<=Math.min(89,best.dip+3); D+=1){
+        for(let R=best.rake-6; R<=best.rake+6; R+=2){
+          let SS=(S+360)%360, RR=((R+180)%360)-180;
+          consider(SS,D,RR);
+        }
+      }
+    }
+    return this.finalize(best);
+  }
+  finalize(best){
+    const {n, s} = FocalMechanismSolver.sdrToNS(best.strike, best.dip, best.rake);
+    const aux = FocalMechanismSolver.nsToSdr(s, n);
+    const fitPct = best.used>0 ? (100*best.correct/best.used) : 0;
+    return { ...best, fitPct, aux };
+  }
+}
+
+// Adjust rake sign based on dip-slip dominance: normal -> negative rake, reverse -> positive rake
+function adjustRakeByDipSense(strike, dip, rake){
+  // Enforce sign purely by dip-slip sense: down-dip => negative rake (normal), up-dip => positive (reverse)
+  // This avoids misclassification when the strike component is larger in magnitude.
+  const norm180 = (x)=>{ let r=((x+180)%360); if(r<0) r+=360; return r-180; };
+  const rk = norm180(rake);
+  const {n, s} = FocalMechanismSolver.sdrToNS(strike, dip, rk);
+  // Build strike (t) and down-dip (d) unit vectors as in nsToSdr
+  let t = FocalMechanismSolver.cross([0,0,1], n);
+  if(Math.hypot(t[0], t[1]) < 1e-8) t = [0,1,0];
+  t = FocalMechanismSolver.norm([t[0], t[1], 0]);
+  let d = FocalMechanismSolver.cross(n, t);
+  // Ensure d points downwards in our convention (z positive is down)
+  if(d[2] < 0){ d = [-d[0], -d[1], -d[2]]; }
+  d = FocalMechanismSolver.norm(d);
+
+  const sd = FocalMechanismSolver.dot(s, d); // slip along down-dip
+  const out = sd > 0 ? -Math.abs(rk) : Math.abs(rk);
+  return { rake: out };
+}
+
+// Enforce rake sign from polarity radiation pattern by comparing pure dip-slip scores (±90°)
+function enforceRakeSignFromPolarities(strike, dip, rake, picks){
+  // If no picks available, fall back to geometric sense
+  if(!Array.isArray(picks) || picks.length === 0){
+    return adjustRakeByDipSense(strike, dip, rake);
+  }
+  const solver = new FocalMechanismSolver(picks);
+  // Use pure dip-slip to classify normal vs reverse independent of rake magnitude
+  const metPlus = solver.scoreStrikeDipRake(strike, dip, +90);
+  const metMinus = solver.scoreStrikeDipRake(strike, dip, -90);
+  const wantPositive = metPlus.score > metMinus.score; // reverse if true, normal otherwise
+  // Apply the chosen sign to the magnitude of the input rake
+  let mag = Math.abs(((rake + 180) % 360) - 180);
+  const signed = wantPositive ? +mag : -mag;
+  return { rake: signed };
+}
+
+// Decide which plane is the physical fault plane and the sign (normal/reverse) from polarities
+function chooseFaultPlaneByPolarities(np1, np2, picks){
+  // Returns {fault: 'np1'|'np2', sign: -1|0|+1, mode: 'dip'|'ss', bestRake}
+  // sign: -1 normal, +1 reverse, 0 strike-slip (undetermined small component)
+  const solver = new FocalMechanismSolver(picks || []);
+  function scoreSet(S,D){
+    const cands = [
+      {r: +90, lab:'+90', mode:'dip', sign:+1,  m: solver.scoreStrikeDipRake(S,D,+90)},
+      {r: -90, lab:'-90', mode:'dip', sign:-1,  m: solver.scoreStrikeDipRake(S,D,-90)},
+      {r:   0, lab:'  0', mode:'ss',  sign: 0,  m: solver.scoreStrikeDipRake(S,D,  0)},
+      {r: 180, lab:'180', mode:'ss',  sign: 0,  m: solver.scoreStrikeDipRake(S,D,180)},
+    ];
+    // pick highest score; tie-break prefers strike-slip if within 1 of best
+    cands.sort((a,b)=> b.m.score - a.m.score);
+    const best = cands[0];
+    const near = cands.find(x=> x.mode==='ss' && (best.m.score - x.m.score) <= 1);
+    if(near && near.m.score >= best.m.score - 1){
+      // classify as strike-slip; refine small-component sign using ±10
+      const p10 = solver.scoreStrikeDipRake(S,D,+10);
+      const m10 = solver.scoreStrikeDipRake(S,D,-10);
+      const sgn = (p10.score>m10.score)? +1 : (m10.score>p10.score? -1 : 0);
+      return {bestRake: near.r, mode:'ss', sign: sgn, score: near.m.score};
+    }
+    return {bestRake: best.r, mode: best.mode, sign: best.sign, score: best.m.score};
+  }
+  const a = scoreSet(np1.strike, np1.dip);
+  const b = scoreSet(np2.strike, np2.dip);
+  if(a.score >= b.score){ return {fault:'np1', sign:a.sign, mode:a.mode, bestRake:a.bestRake}; }
+  return {fault:'np2', sign:b.sign, mode:b.mode, bestRake:b.bestRake};
+}
+
+
+/* ---------- Drawing helpers ---------- */
+function drawPlaneGreatCircle(normal, color){
+  const n = normal.slice();
+  const mag=Math.hypot(n[0],n[1],n[2])||1; n[0]/=mag; n[1]/=mag; n[2]/=mag;
+  let k=[0,0,1]; if(Math.abs(n[0]*k[0]+n[1]*k[1]+n[2]*k[2])>0.98) k=[0,1,0];
+  let u=[ n[1]*k[2]-n[2]*k[1], n[2]*k[0]-n[0]*k[2], n[0]*k[1]-n[1]*k[0] ];
+  let L=Math.hypot(u[0],u[1],u[2]); if(L<1e-9) return; u=[u[0]/L,u[1]/L,u[2]/L];
+  let w=[ n[1]*u[2]-n[2]*u[1], n[2]*u[0]-n[0]*u[2], n[0]*u[1]-n[1]*u[0] ];
+  L=Math.hypot(w[0],w[1],w[2]); if(L<1e-9) return; w=[w[0]/L,w[1]/L,w[2]/L];
+
+  ctx.strokeStyle=color; ctx.lineWidth=4; ctx.beginPath();
+  let first=true, prev=null;
+  for(let s=0; s<=360; s+=2){
+    const t = toRad(s);
+    const v=[ u[0]*Math.cos(t)+w[0]*Math.sin(t),
+              u[1]*Math.cos(t)+w[1]*Math.sin(t),
+              u[2]*Math.cos(t)+w[2]*Math.sin(t) ];
+    const az_math = toDeg(Math.atan2(v[1], v[0]));
+    const az = (90 - az_math + 360) % 360;
+    let tk  = toDeg(Math.acos(-v[2]));
+    let azp = az, tkp = tk;
+    if(tk>90){ tkp=180-tk; azp=(az+180)%360; }
+    const pt = xyFromAzTakeoff(azp, tkp);
+    const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+    if(first){ ctx.moveTo(x,y); first=false; prev=[x,y]; }
+    else{
+      const dx=x-prev[0], dy=y-prev[1];
+      if(Math.hypot(dx,dy) > view.R*0.5){ ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,y); }
+      else{ ctx.lineTo(x,y); }
+      prev=[x,y];
+    }
+  }
+  ctx.stroke();
+}
+function drawAxisMarker(vec, color, label){
+  const az_math = toDeg(Math.atan2(vec[1], vec[0]));
+  const az = (90 - az_math + 360) % 360;
+  let tk  = toDeg(Math.acos(-vec[2]));
+  let azp=az, tkp=tk;
+  if(tk>90){ tkp=180-tk; azp=(az+180)%360; }
+  const pt = xyFromAzTakeoff(azp, tkp);
+  const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+  ctx.fillStyle=color; ctx.strokeStyle=color; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-8,y); ctx.lineTo(x+8,y); ctx.moveTo(x,y-8); ctx.lineTo(x,y+8); ctx.stroke();
+  ctx.fillStyle="#000000"; ctx.font="12px ui-monospace, monospace"; ctx.fillText(label, x+8, y-8);
+}
+
+/* ---------- Stereonet Drawing ---------- */
+function drawStereo(){
+  ctx.clearRect(0,0,stereo.width,stereo.height);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,stereo.width,stereo.height);
+  ctx.strokeStyle="#000000"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+
+  // Add directional labels
+  ctx.fillStyle="#000000"; ctx.font="14px ui-monospace";
+  ctx.fillText("N", view.cx+view.panX, view.cy+view.panY - view.R*view.zoom - 10);
+  ctx.fillText("S", view.cx+view.panX, view.cy+view.panY + view.R*view.zoom + 20);
+  ctx.fillText("E", view.cx+view.panX + view.R*view.zoom + 10, view.cy+view.panY + 5);
+  ctx.fillText("W", view.cx+view.panX - view.R*view.zoom - 20, view.cy+view.panY + 5);
+
+  
+  // ----- Manual overlay: Draw A, B, C points and poles -----
+  if (MANUAL_MODE) {
+    // Draw Point A (Green circle with "A" label)
+    if (MANUAL_STATE.A) {
+        const {az, tk} = MANUAL_STATE.A;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#10b981"; // Green
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("A", x - 4, y + 5);
+    }
+
+    // Draw Point B (Green circle with "B" label)
+    if (MANUAL_STATE.B) {
+        const {az, tk} = MANUAL_STATE.B;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#10b981"; // Green
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("B", x - 4, y + 5);
+    }
+
+    // NP1 from A & B: draw great circle through A and B and mark its pole
+    if (MANUAL_STATE.A && MANUAL_STATE.B) {
+        const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+        const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+        let n1 = FocalMechanismSolver.cross(vA, vB);
+        const L = Math.hypot(n1[0], n1[1], n1[2]);
+        if (L > 1e-9) {
+            n1 = [n1[0]/L, n1[1]/L, n1[2]/L];
+            drawPlaneGreatCircle(n1, "black");
+            drawAxisMarker(n1, '#f59e0b', 'Pole1');
+        }
+    }
+
+    // Draw Point C (Cyan circle with "C" label)
+    if (MANUAL_STATE.C) {
+        const {az, tk} = MANUAL_STATE.C;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#06b6d4"; // Cyan
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("C", x - 4, y + 5);
+    }
+
+    // NP2 from Pole1 and C: draw great circle through Pole1 and C and mark its pole
+    if (MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C) {
+        const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+        const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+        let n1 = FocalMechanismSolver.cross(vA, vB);
+        let L1 = Math.hypot(n1[0], n1[1], n1[2]);
+        if (L1 > 1e-9) {
+            n1 = [n1[0]/L1, n1[1]/L1, n1[2]/L1];
+            const vC = FocalMechanismSolver.rayVecNED(MANUAL_STATE.C.az, MANUAL_STATE.C.tk);
+            let n2 = FocalMechanismSolver.cross(n1, vC);
+            const L2 = Math.hypot(n2[0], n2[1], n2[2]);
+            if (L2 > 1e-9) {
+                n2 = [n2[0]/L2, n2[1]/L2, n2[2]/L2];
+                // enforce orthogonality numerically
+                const dot12 = n1[0]*n2[0] + n1[1]*n2[1] + n1[2]*n2[2];
+                n2 = [n2[0]-dot12*n1[0], n2[1]-dot12*n1[1], n2[2]-dot12*n1[2]];
+                const L2b = Math.hypot(n2[0], n2[1], n2[2]);
+                if (L2b > 1e-9) n2 = [n2[0]/L2b, n2[1]/L2b, n2[2]/L2b];
+
+                        drawPlaneGreatCircle(n2, "black");
+                drawAxisMarker(n2, '#f59e0b', 'Pole2');
+            }
+        }
+    }
+}
+
+  // Cursor crosshair & readout
+  if(stereoCursor.x!=null){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(stereoCursor.x-12, stereoCursor.y); ctx.lineTo(stereoCursor.x+12, stereoCursor.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(stereoCursor.x, stereoCursor.y-12); ctx.lineTo(stereoCursor.x, stereoCursor.y+12); ctx.stroke();
+    ctx.setLineDash([]);
+    const lab = `az=${stereoCursor.az.toFixed(2)}°, tk=${stereoCursor.tk.toFixed(2)}°`;
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fillRect(stereoCursor.x+10, stereoCursor.y-20, ctx.measureText(lab).width+10, 16);
+    ctx.fillStyle='#000'; ctx.fillText(lab, stereoCursor.x+15, stereoCursor.y-8);
+    ctx.restore();
+  }
+
+  // --- Manual-mode: derive SDR from picked poles (n1, n2) by scoring 4 assignments ---
+  MANUAL_SOL = null;
+  const __manualReady = (typeof MANUAL_MODE!=='undefined') && MANUAL_MODE && MANUAL_STATE && MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C;
+  let __gc = null;
+  if(__manualReady){
+    // Use Fortran method to compute strike and dip from A and B
+    const di = [toRad(MANUAL_STATE.A.tk), toRad(MANUAL_STATE.B.tk)];
+    const azm = [toRad(MANUAL_STATE.A.az), toRad(MANUAL_STATE.B.az)];
+    const {strike, dip} = strkdip(di, azm);
+    
+    // Calculate pole of first plane (for second plane) - following Fortran code
+    const poleAz = strike + 90;
+    const poleTk = dip;
+    
+    // Use pole of first plane and point C to define second plane
+    const di2 = [toRad(poleTk), toRad(MANUAL_STATE.C.tk)];
+    const azm2 = [toRad(poleAz), toRad(MANUAL_STATE.C.az)];
+    const {strike: strike2, dip: dip2} = strkdip(di2, azm2);
+    
+    // Calculate rake using Fortran method
+    const {rake1, rake2} = rake(
+      toRad(strike), toRad(dip),
+      toRad(strike2), toRad(dip2)
+    );
+    
+    // Choose the rake that gives better polarity fit
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    const solver = new FocalMechanismSolver(picks);
+    
+    const met1 = solver.scoreStrikeDipRake(strike, dip, rake1);
+    const met2 = solver.scoreStrikeDipRake(strike, dip, rake2);
+    
+    const bestRake = (met1.score > met2.score) ? rake1 : rake2;
+    const bestMetrics = (met1.score > met2.score) ? met1 : met2;
+    // Decide physical fault plane and sign
+    const decision = chooseFaultPlaneByPolarities({strike, dip}, {strike: strike2, dip: dip2}, picks);
+    const magNP1 = Math.abs(((bestRake + 180) % 360) - 180);
+    const magNP2 = Math.abs(((((bestRake === rake1) ? rake2 : rake1) + 180) % 360) - 180);
+
+    let finalNP1, finalNP2;
+    if(decision.fault === 'np1'){
+      // NP1 is fault: apply sign to NP1 magnitude, recompute NP2 from orthogonality
+      const signedR = decision.sign===0 ? (magNP1>=0? +magNP1 : -magNP1) : (decision.sign>0 ? +magNP1 : -magNP1);
+      const sdr1 = {strike, dip, rake: signedR};
+      const ns = FocalMechanismSolver.sdrToNS(sdr1.strike, sdr1.dip, sdr1.rake);
+      const auxSDR = FocalMechanismSolver.nsToSdr(ns.s, ns.n);
+      finalNP1 = sdr1;
+      finalNP2 = auxSDR;
+      if(decision.sign!==0){
+        finalNP1.rake = (decision.sign>0 ? Math.abs(finalNP1.rake) : -Math.abs(finalNP1.rake));
+        finalNP2.rake = (decision.sign>0 ? Math.abs(finalNP2.rake) : -Math.abs(finalNP2.rake));
+      }
+    }else{
+      // NP2 is fault: apply sign to NP2 magnitude, recompute NP1 from orthogonality, but report NP1 as the fault
+      const signedR = decision.sign===0 ? (magNP2>=0? +magNP2 : -magNP2) : (decision.sign>0 ? +magNP2 : -magNP2);
+      const sdr2 = {strike: strike2, dip: dip2, rake: signedR};
+      const ns2 = FocalMechanismSolver.sdrToNS(sdr2.strike, sdr2.dip, sdr2.rake);
+      const aux1 = FocalMechanismSolver.nsToSdr(ns2.s, ns2.n);
+      finalNP1 = sdr2;      // swap: report fault as NP1
+      finalNP2 = aux1;      // report conjugate as NP2
+      if(decision.sign!==0){
+        finalNP1.rake = (decision.sign>0 ? Math.abs(finalNP1.rake) : -Math.abs(finalNP1.rake));
+        finalNP2.rake = (decision.sign>0 ? Math.abs(finalNP2.rake) : -Math.abs(finalNP2.rake));
+      }
+    }
+
+    // Set final solution
+    MANUAL_SOL = {
+      strike: finalNP1.strike,
+      dip: finalNP1.dip,
+      rake: finalNP1.rake,
+      aux: { strike: finalNP2.strike, dip: finalNP2.dip, rake: finalNP2.rake },
+      ...bestMetrics,
+      fitPct: bestMetrics.used ? (100 * bestMetrics.correct / bestMetrics.used) : 0
+    };
+
+    // Update display with correct rake values
+    document.getElementById('np1').innerText = `Strike=${MANUAL_SOL.strike.toFixed(1)}°, Dip=${MANUAL_SOL.dip.toFixed(1)}°, Rake=${MANUAL_SOL.rake.toFixed(1)}°`;
+    document.getElementById('np2').innerText = `Strike=${MANUAL_SOL.aux.strike.toFixed(1)}°, Dip=${MANUAL_SOL.aux.dip.toFixed(1)}°, Rake=${MANUAL_SOL.aux.rake.toFixed(1)}°`;
+    document.getElementById('fmscore').innerText = `Fit: ${MANUAL_SOL.fitPct.toFixed(1)}% (wrong=${MANUAL_SOL.wrong}, nodal=${MANUAL_SOL.nodal})`;
+  }
+
+if(MANUAL_MODE && MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C){
+    // Build moment tensor directly from user-picked NP1/NP2
+    const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+    const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+    let n1 = FocalMechanismSolver.cross(vA, vB);
+    let L1 = Math.hypot(n1[0], n1[1], n1[2]);
+    if(L1 > 1e-9){
+      n1 = [n1[0]/L1, n1[1]/L1, n1[2]/L1];
+      const vC = FocalMechanismSolver.rayVecNED(MANUAL_STATE.C.az, MANUAL_STATE.C.tk);
+      let n2 = FocalMechanismSolver.cross(n1, vC);
+      let L2 = Math.hypot(n2[0], n2[1], n2[2]);
+      if(L2 > 1e-9){
+        n2 = [n2[0]/L2, n2[1]/L2, n2[2]/L2];
+        // orthogonalize n2 to n1
+        const dot12 = n1[0]*n2[0] + n1[1]*n2[1] + n1[2]*n2[2];
+        n2 = [n2[0]-dot12*n1[0], n2[1]-dot12*n1[1], n2[2]-dot12*n1[2]];
+        const L2b = Math.hypot(n2[0], n2[1], n2[2]);
+        if(L2b > 1e-9) n2 = [n2[0]/L2b, n2[1]/L2b, n2[2]/L2b];
+
+        // Build DC tensor directly from nodal-plane normals so nodal lines match NP1/NP2
+        // P ∝ n1 + n2, T ∝ n1 − n2; M = T T^T − P P^T
+        let P = [n1[0]+n2[0], n1[1]+n2[1], n1[2]+n2[2]];
+        let T = [n1[0]-n2[0], n1[1]-n2[1], n1[2]-n2[2]];
+        const LP = Math.hypot(P[0], P[1], P[2]);
+        const LT = Math.hypot(T[0], T[1], T[2]);
+        if(LP > 1e-9 && LT > 1e-9){
+          P = [P[0]/LP, P[1]/LP, P[2]/LP];
+          T = [T[0]/LT, T[1]/LT, T[2]/LT];
+          const M = [[0,0,0],[0,0,0],[0,0,0]];
+          for(let i=0;i<3;i++){
+            for(let j=0;j<3;j++){
+              M[i][j] = T[i]*T[j] - P[i]*P[j];
+            }
+          }
+          // Polarity-based sign adjustment for correct P/T association; shadow on T-side
+          const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+          let correct = 0, wrong = 0;
+          for(const p of picks){
+            const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+            const A = FocalMechanismSolver.amplitude(M, nvec);
+            const sign = (A > 0) ? '+' : '−';
+            if(sign === p.pol) correct++; else wrong++;
+          }
+          if(wrong > correct){
+            for(let i=0; i<3; i++) for(let j=0; j<3; j++) M[i][j] = -M[i][j];
+          }
+          let {evals, evecs} = jacobiEigenSym3(M);
+          let iMin=0, iMax=0; for(let i=1;i<3;i++){ if(evals[i]<evals[iMin]) iMin=i; if(evals[i]>evals[iMax]) iMax=i; }
+          FILL_T_MATCH = true;
+          drawBeachball(M);
+          
+          // Store P/T state for consistent rake computation
+          let P_vec = evecs[iMin];
+          let T_vec = evecs[iMax];
+          if (P_vec[2] < 0) P_vec = [-P_vec[0], -P_vec[1], -P_vec[2]];
+          if (T_vec[2] < 0) T_vec = [-T_vec[0], -T_vec[1], -T_vec[2]];
+          window.__PT_STATE__ = {P: P_vec, T: T_vec};
+          
+          if(document.getElementById('showPT').checked){
+        drawAxisMarker(P_vec, '#60a5fa', 'P');
+        drawAxisMarker(T_vec, '#ef4444', 'T');
+      }
+          // Redraw outer circle, NP1 and NP2 lines on top of beachball for visibility
+          ctx.strokeStyle="#000000"; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+          drawPlaneGreatCircle(n1, "black");
+          drawPlaneGreatCircle(n2, "black");
+        }
+      }
+    }
+} else if(MANUAL_SOL || FM_SOLUTION){
+    const {M} = FocalMechanismSolver.sdrToMoment((MANUAL_SOL||FM_SOLUTION).strike, (MANUAL_SOL||FM_SOLUTION).dip, (MANUAL_SOL||FM_SOLUTION).rake);
+    // Check moment-tensor sign against observed polarities
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    let correct = 0, wrong = 0;
+    for(const p of picks){
+      const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+      const A = FocalMechanismSolver.amplitude(M, nvec);
+      const sign = (A>0)? '+' : '−';
+      if(sign === p.pol) correct++; else wrong++;
+    }
+    if(wrong > correct){
+      // Flip moment tensor sign
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) M[i][j] = -M[i][j];
+    }
+    FILL_T_MATCH = true;
+    drawBeachball(M);
+    if(!MANUAL_MODE){
+      const ns = FocalMechanismSolver.sdrToNS((MANUAL_SOL||FM_SOLUTION).strike, (MANUAL_SOL||FM_SOLUTION).dip, (MANUAL_SOL||FM_SOLUTION).rake);
+      // Redraw outer circle on top of beachball for visibility
+      ctx.strokeStyle="#000000"; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+      drawPlaneGreatCircle(ns.n, "black");
+      drawPlaneGreatCircle(ns.s, "black");
+      const {evals, evecs} = jacobiEigenSym3(M);
+      let iMin=0,iMax=0; for(let i=1;i<3;i++){ if(evals[i]<evals[iMin]) iMin=i; if(evals[i]>evals[iMax]) iMax=i; }
+      let P_vec = evecs[iMin];
+      if (P_vec[2] < 0) P_vec = [-P_vec[0], -P_vec[1], -P_vec[2]];
+      let T_vec = evecs[iMax];
+      if (T_vec[2] < 0) T_vec = [-T_vec[0], -T_vec[1], -T_vec[2]];
+      
+      // Store P/T state for consistent rake computation
+      window.__PT_STATE__ = {P: P_vec, T: T_vec};
+      
+      if(document.getElementById('showPT').checked){ 
+        drawAxisMarker(P_vec, '#ef4444', '★ P'); 
+        drawAxisMarker(T_vec, '#60a5fa', '☆ T'); 
+      }
+    }
+  }
+
+  // stations with custom polarity symbols
+  rows.forEach(r=>{
+    if(!isFinite(r.tk_plot)||!isFinite(r.az_used)) return;
+    const pt = xyFromAzTakeoff(r.az_used, r.tk_plot);
+    const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+    const radius = 6;
+    if(r.pol==='+'){
+      ctx.beginPath(); ctx.fillStyle="#ef4444"; ctx.arc(x,y,radius,0,2*Math.PI); ctx.fill();
+    }else if(r.pol==='−'){
+      ctx.beginPath(); ctx.strokeStyle="#60a5fa"; ctx.lineWidth=2; ctx.arc(x,y,radius,0,2*Math.PI); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.fillStyle="#94a3b8"; ctx.arc(x,y,3,0,2*Math.PI); ctx.fill();
+    }
+  });
+
+  // manual picks overlay (if any)
+  if(MANUAL_POINTS.length>0){
+    const colors = ['#34d399','#a78bfa'];
+    MANUAL_POINTS.forEach((vec, idx)=> drawAxisMarker(vec, colors[idx%2], idx===0?'n':'s'));
+  }
+}
+
+/* ---------- Mouse interactions ---------- */
+stereo.addEventListener('wheel', (e)=>{ e.preventDefault(); const s=Math.exp(-e.deltaY*0.001); view.zoom=Math.min(12,Math.max(0.2,view.zoom*s)); drawStereo(); }, {passive:false});
+stereo.addEventListener('mousedown', (e)=>{ 
+  // Allow dragging only when NOT in MANUAL_MODE
+  if(!MANUAL_MODE) {
+    dragging=true; 
+    last={x:e.offsetX,y:e.offsetY}; 
+  }
+});
+stereo.addEventListener('mouseup', ()=> dragging=false);
+stereo.addEventListener('mouseleave', ()=> dragging=false);
+stereo.addEventListener('mousemove', (e)=>{ 
+  if(!dragging) return; 
+  const dx=e.offsetX-last.x, dy=e.offsetY-last.y; 
+  view.panX+=dx; view.panY+=dy; 
+  last={x:e.offsetX,y:e.offsetY}; 
+  drawStereo(); 
+});
+
+
+/* ---------- Fortran-inspired spherical geometry functions ---------- */
+function strkdip(di, azm) {
+  // di, azm: arrays of 2 angles in radians
+  const pi = Math.PI;
+  const bid1 = pi - di[0];
+  const bid2 = pi - di[1];
+  const fai = azm[1] - azm[0];
+  
+  const cosi1 = Math.cos(bid1);
+  const cosi2 = Math.cos(bid2);
+  const sini1 = Math.sin(bid1);
+  const sini2 = Math.sin(bid2);
+  const cosfi = Math.cos(fai);
+  const sinfi = Math.sin(fai);
+  
+  const cosd = cosi1 * cosi2 + sini1 * sini2 * cosfi;
+  const d = Math.acos(cosd);
+  const sinb = sinfi * sini1 / Math.sin(d);
+  const temp = cosi1 - cosi2 * cosd;
+  const cosb = temp / (sini2 * Math.sin(d));
+  const b = Math.atan2(sinb, cosb);
+  
+  const cosdip = sini2 * sinb;
+  let dip = Math.acos(cosdip);
+  const sinstr = cosb / Math.sin(dip);
+  const cosstr = -cosi2 / (sini2 * Math.tan(dip));
+  let str = Math.atan2(sinstr, cosstr);
+  let strike = azm[1] + str - pi/2;
+  
+  if (dip > pi/2.0) {
+    dip = pi - dip;
+    strike += pi;
+  }
+  if (strike <= 0.0) strike += 2.0 * pi;
+  if (strike >= 2.0 * pi) strike -= 2.0 * pi;
+  
+  return { strike: toDeg(strike), dip: toDeg(dip) };
+}
+
+function rake(strk1, dip1, strk2, dip2) {
+  // All inputs in radians
+  const cosd1 = Math.cos(dip1);
+  const cosd2 = Math.cos(dip2);
+  const sind1 = Math.sin(dip1);
+  const sind2 = Math.sin(dip2);
+  const cosf1 = Math.cos(strk1);
+  const cosf2 = Math.cos(strk2);
+  const sinf1 = Math.sin(strk1);
+  const sinf2 = Math.sin(strk2);
+  
+  const sinr1 = cosd2 / sind1;
+  let temp = sind2 * cosf2 + cosd2 / sind1 * cosd1 * cosf1;
+  const cosr1 = temp / sinf1;
+  const rake1 = Math.atan2(sinr1, cosr1);
+  
+  const sinr2 = cosd1 / sind2;
+  temp = sind1 * cosf1 + cosd1 / sind2 * cosd2 * cosf2;
+  const cosr2 = temp / sinf2;
+  const rake2 = Math.atan2(sinr2, cosr2);
+  
+  return { rake1: toDeg(rake1), rake2: toDeg(rake2) };
+}
+
+/* ---------- Modified manual mode following Fortran code ---------- */
+stereo.addEventListener('click', (e)=>{
+  if(!MANUAL_MODE) return;
+  const cx=view.cx+view.panX, cy=view.cy+view.panY;
+  const rect = stereo.getBoundingClientRect();
+  const x = (e.clientX - rect.left);
+  const y = (e.clientY - rect.top);
+  const dx = x - cx;
+  const dy = y - cy;
+  const R = view.R*view.zoom;
+  if(Math.hypot(dx,dy) > R) return;
+
+  // Map click -> (az, takeoff) 
+  const {az, tk} = azTkFromXY(dx, dy);
+
+  if(!MANUAL_STATE.A){
+    MANUAL_STATE = {A:{az, tk}, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+    document.getElementById('manualHint').textContent = "Point A chosen. Click B on the same plane.";
+  }else if(!MANUAL_STATE.B){
+    MANUAL_STATE.B = {az, tk};
+    
+    // Use Fortran method to compute strike and dip from A and B
+    const di = [toRad(MANUAL_STATE.A.tk), toRad(MANUAL_STATE.B.tk)];
+    const azm = [toRad(MANUAL_STATE.A.az), toRad(MANUAL_STATE.B.az)];
+    const {strike, dip} = strkdip(di, azm);
+    
+    // Store first plane solution
+    MANUAL_STATE.strike1 = strike;
+    MANUAL_STATE.dip1 = dip;
+    
+    // Calculate pole of first plane (for second plane) - following Fortran code
+    const poleAz = strike + 90;
+    const poleTk = dip;
+    
+    MANUAL_STATE.poleAz = poleAz;
+    MANUAL_STATE.poleTk = poleTk;
+    
+    document.getElementById('manualHint').textContent = `Plane 1: Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°. Pole marked. Click C for second plane.`;
+    document.getElementById('np1').innerText = `Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°`;
+  }else if(!MANUAL_STATE.C){
+    MANUAL_STATE.C = {az, tk};
+    
+    // Use pole of first plane and point C to define second plane
+    const di = [toRad(MANUAL_STATE.poleTk), toRad(MANUAL_STATE.C.tk)];
+    const azm = [toRad(MANUAL_STATE.poleAz), toRad(MANUAL_STATE.C.az)];
+    const {strike: strike2, dip: dip2} = strkdip(di, azm);
+
+    MANUAL_STATE.strike2 = strike2;
+    MANUAL_STATE.dip2 = dip2;
+
+    // Compute initial metrics for display (rake will be updated from P/T axes)
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    const solver = new FocalMechanismSolver(picks);
+    const dummyRake = 0; // placeholder, will be overridden
+    const bestMetrics = solver.scoreStrikeDipRake(MANUAL_STATE.strike1, MANUAL_STATE.dip1, dummyRake);
+
+    // Set initial solution (rake to be updated from P/T)
+    FM_SOLUTION = {
+      strike: MANUAL_STATE.strike1,
+      dip: MANUAL_STATE.dip1,
+      rake: 0, // placeholder
+      aux: { strike: strike2, dip: dip2, rake: 0 }, // placeholder
+      ...bestMetrics,
+      fitPct: bestMetrics.used ? (100 * bestMetrics.correct / bestMetrics.used) : 0
+    };
+    
+    document.getElementById('np1').innerText = `Strike=${FM_SOLUTION.strike.toFixed(1)}°, Dip=${FM_SOLUTION.dip.toFixed(1)}°, Rake=${FM_SOLUTION.rake.toFixed(1)}°`;
+    document.getElementById('np2').innerText = `Strike=${FM_SOLUTION.aux.strike.toFixed(1)}°, Dip=${FM_SOLUTION.aux.dip.toFixed(1)}°, Rake=${FM_SOLUTION.aux.rake.toFixed(1)}°`;
+    document.getElementById('fmscore').innerText = `Fit: ${FM_SOLUTION.fitPct.toFixed(1)}% (wrong=${FM_SOLUTION.wrong}, nodal=${FM_SOLUTION.nodal})`;
+    document.getElementById('manualHint').textContent = "Manual solution complete. Click Reset to change.";
+  }
+  drawStereo();
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(!MANUAL_MODE) return;
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  
+  // Determine which point to nudge
+  let pointToMove = null;
+  if(MANUAL_STATE.C) pointToMove = 'C';
+  else if(MANUAL_STATE.B) pointToMove = 'B';
+  else if(MANUAL_STATE.A) pointToMove = 'A';
+  if(!pointToMove) return;
+  
+  const step = e.shiftKey ? 0.05 : 0.25;
+  let az, tk;
+  
+  switch(pointToMove) {
+    case 'A': az = MANUAL_STATE.A.az; tk = MANUAL_STATE.A.tk; break;
+    case 'B': az = MANUAL_STATE.B.az; tk = MANUAL_STATE.B.tk; break;
+    case 'C': az = MANUAL_STATE.C.az; tk = MANUAL_STATE.C.tk; break;
+  }
+  
+  if(e.key==='ArrowLeft') az = (az - step + 360) % 360;
+  if(e.key==='ArrowRight') az = (az + step) % 360;
+  if(e.key==='ArrowUp') tk = Math.max(0, tk - step);
+  if(e.key==='ArrowDown') tk = Math.min(180, tk + step);
+  
+  // Update the point
+  switch(pointToMove) {
+    case 'A': 
+      MANUAL_STATE.A.az = az; 
+      MANUAL_STATE.A.tk = tk;
+      break;
+    case 'B': 
+      MANUAL_STATE.B.az = az; 
+      MANUAL_STATE.B.tk = tk;
+      // Recompute first plane
+      if(MANUAL_STATE.A) {
+        const di = [toRad(MANUAL_STATE.A.tk), toRad(tk)];
+        const azm = [toRad(MANUAL_STATE.A.az), toRad(az)];
+        const {strike, dip} = strkdip(di, azm);
+        MANUAL_STATE.strike1 = strike;
+        MANUAL_STATE.dip1 = dip;
+        
+        // Update pole
+        MANUAL_STATE.poleAz = strike + 90;
+        MANUAL_STATE.poleTk = dip;
+        
+        document.getElementById('np1').innerText = `Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°`;
+      }
+      break;
+    case 'C': 
+      MANUAL_STATE.C.az = az; 
+      MANUAL_STATE.C.tk = tk;
+        // Recompute second plane if first plane is defined
+      if(MANUAL_STATE.strike1 !== undefined) {
+        const di = [toRad(MANUAL_STATE.poleTk), toRad(tk)];
+        const azm = [toRad(MANUAL_STATE.poleAz), toRad(az)];
+        const {strike: strike2, dip: dip2} = strkdip(di, azm);
+
+        MANUAL_STATE.strike2 = strike2;
+        MANUAL_STATE.dip2 = dip2;
+
+        // Update FM_SOLUTION strike/dip (rake will be updated from P/T)
+        if (FM_SOLUTION) {
+          FM_SOLUTION.aux.strike = strike2;
+          FM_SOLUTION.aux.dip = dip2;
+        }
+      }
+      break;
+  }
+  
+  drawStereo();
+  e.preventDefault();
+});
+
+document.getElementById('btnManual').addEventListener('click', ()=>{
+  MANUAL_MODE = !MANUAL_MODE;
+  MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+  document.getElementById('manualHint').textContent = MANUAL_MODE ? "Manual mode ON. Click A, then B on first plane, then C for second plane." : "";
+  document.getElementById('btnManual').classList.toggle('secondary', MANUAL_MODE);
+  drawStereo();
+});
+
+document.getElementById('btnResetFM').addEventListener('click', ()=>{
+  FM_SOLUTION = null;
+  MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+  MANUAL_MODE = false;
+  document.getElementById('np1').innerText = '—';
+  document.getElementById('np2').innerText = '—';
+  document.getElementById('fmscore').innerText = '—';
+  document.getElementById('manualHint').textContent = "";
+  drawStereo();
+});
+
+document.getElementById('btnExportPNG').addEventListener('click', ()=>{
+  const url = stereo.toDataURL('image/png');
+  const a = document.createElement('a'); a.href=url; a.download='stereonet.png'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); }, 0);
+});
+
+/* ---------- Picker ---------- */
+const modal = document.getElementById('modal');
+const pickList = document.getElementById('pickList');
+const pickCanvas = document.getElementById('pickCanvas');
+const pctx = setupHiDPICanvas(pickCanvas);
+let pickIndex = 0;
+let viewX = {t0:0, t1:10};
+let panStart = null;
+let setPMode = false;
+
+function filteredSegment(seg, dt){
+  const doFilt = document.getElementById('doFilt').checked;
+  const hp = parseFloat(document.getElementById('hpHz').value)||0;
+  const lp = parseFloat(document.getElementById('lpHz').value)||0;
+  const doNorm = document.getElementById('doNorm').checked;
+  let y = seg;
+  if(doFilt) y = bandpass(seg, dt, hp, lp);
+  if(doNorm){
+    let m=1e-9; for(let i=0;i<y.length;i++){ const a=Math.abs(y[i]); if(a>m) m=a; }
+    const z = new Float32Array(y.length);
+    for(let i=0;i<y.length;i++) z[i]= y[i]/m;
+    return z;
+  }
+  return y;
+}
+
+function suggestPolarity(r, tP){
+  if(!r || !r.data) return '?';
+  const dt=r.delta||0.01, b=r.b||0;
+  const n=r.data.length;
+  const iP = Math.max(1, Math.min(n-2, Math.round((tP - b)/dt)));
+  const kB = Math.max(1, Math.floor(0.02/dt));
+  const kA = Math.max(1, Math.floor(0.02/dt));
+  const i0 = Math.max(0, iP - kB);
+  const i1 = Math.min(n-1, iP + kA);
+  const segOrig = r.data.subarray(i0, i1+1);
+  const seg = filteredSegment(segOrig, dt);
+  let mB=0, mA=0, nb=0, na=0;
+  for(let i=0;i<seg.length;i++){
+    if(i+i0 < iP){ mB+=seg[i]; nb++; } else { mA+=seg[i]; na++; }
+  }
+  mB/=Math.max(1,nb); mA/=Math.max(1,na);
+  let rms=0; for(let i=0;i<seg.length;i++) rms+=seg[i]*seg[i];
+  rms = Math.sqrt(rms/Math.max(1, seg.length));
+  const delta = mA - mB;
+  const thr = 0.2*rms;
+  if(delta>thr) return '+';
+  if(delta<-thr) return '−';
+  return '?';
+}
+
+// Simple STA/LTA-based first-arrival detector to estimate P time
+function detectPTime(r){
+  if(!r || !r.data) return null;
+  const dt = r.delta || 0.01, b = r.b || 0;
+  const x = r.data;
+  // de-mean
+  let mean = 0; for(let i=0;i<x.length;i++) mean += x[i]; mean /= Math.max(1, x.length);
+  const dm = new Float32Array(x.length); for(let i=0;i<x.length;i++) dm[i] = x[i] - mean;
+  const y = filteredSegment(dm, dt); // obeys current filter settings
+  const N = y.length; if(N < 50) return null;
+  const staSec = 0.3, ltaSec = 5.0, thr = 3.0;
+  const nSTA = Math.max(1, Math.floor(staSec/dt));
+  const nLTA = Math.max(nSTA + 1, Math.floor(ltaSec/dt));
+  if(N <= nLTA) return null;
+  // cumulative sum of absolute values for O(1) window sums
+  const csum = new Float32Array(N+1); csum[0]=0;
+  for(let i=0;i<N;i++) csum[i+1] = csum[i] + Math.abs(y[i]);
+  for(let i=nLTA; i<N; i++){
+    const sumL = csum[i] - csum[i-nLTA];
+    const sumS = csum[i] - csum[i-nSTA];
+    const ltaAvg = sumL / nLTA;
+    const staAvg = sumS / nSTA;
+    const ratio = ltaAvg > 1e-9 ? (staAvg / ltaAvg) : 0;
+    if(ratio > thr){
+      return b + i*dt;
+    }
+  }
+  return null;
+}
+
+function autoPickPolarityAll(){
+  let picked = 0, marked = 0;
+  for(const r of rows){
+    if(!r || !r.data) continue;
+    let t = r.pmark;
+    if(t == null) { t = detectPTime(r); if(t!=null) marked++; }
+    if(t == null) continue;
+    r.pmark = t;
+    r.psuggest = suggestPolarity(r, t);
+    if(r.psuggest && r.psuggest !== '?'){ r.pol = r.psuggest; picked++; }
+  }
+  // Update UI
+  renderTable();
+  if(rows[pickIndex]){ drawPick(); updatePMeta(); }
+  const st = document.getElementById('pickStatus');
+  if(st) st.textContent = `Auto picked ${picked} polarity(ies); set P-time for ${marked} trace(s).`;
+}
+
+function drawPick(){
+  const r = rows[pickIndex];
+  pctx.clearRect(0,0,pickCanvas.width, pickCanvas.height);
+  pctx.fillStyle="#0b1220"; pctx.fillRect(0,0,pickCanvas.width, pickCanvas.height);
+  if(!r || !r.data){ pctx.fillStyle="#94a3b8"; pctx.fillText("No waveform data in this SAC.", 20, 24); return; }
+  const n = r.data.length, dt = r.delta||0.01, b=r.b||0;
+  const tmax = b + n*dt;
+  const t0 = Math.max(b, viewX.t0), t1 = Math.min(tmax, viewX.t1);
+  const x0=50, x1=pickCanvas.width-10, y0=24, y1=pickCanvas.height-48;
+  const i0 = Math.max(0, Math.floor((t0-b)/dt));
+  const i1 = Math.min(n-1, Math.ceil((t1-b)/dt));
+  const segOrig = r.data.subarray(i0, i1);
+  let mean=0; for(let i=0;i<segOrig.length;i++) mean+=segOrig[i]; mean/=Math.max(1,segOrig.length);
+  const segDm = new Float32Array(segOrig.length); for(let i=0;i<segOrig.length;i++) segDm[i]=segOrig[i]-mean;
+  const seg = filteredSegment(segDm, dt);
+  let maxa=1e-6; for(let i=0;i<seg.length;i++){ const a=Math.abs(seg[i]); if(a>maxa) maxa=a; }
+  pctx.strokeStyle="#1f2937"; pctx.lineWidth=1; pctx.beginPath(); pctx.rect(x0,y0,x1-x0,y1-y0); pctx.stroke();
+  const yMid = (y0+y1)/2;
+  pctx.strokeStyle="#0e1a30"; pctx.beginPath(); pctx.moveTo(x0,yMid); pctx.lineTo(x1,yMid); pctx.stroke();
+  pctx.strokeStyle="#22d3ee"; pctx.lineWidth=1; pctx.beginPath();
+  for(let i=0;i<seg.length;i++){
+    const t = b + (i0+i)*dt;
+    const x = x0 + (t - t0)/(t1 - t0) * (x1 - x0);
+    const y = yMid - (seg[i]/maxa) * (y1 - y0) * 0.45;
+    if(i===0) pctx.moveTo(x,y); else pctx.lineTo(x,y);
+  }
+  pctx.stroke();
+  if(r.pmark!=null && r.pmark>=t0 && r.pmark<=t1){
+    const xP = x0 + (r.pmark - t0)/(t1 - t0) * (x1 - x0);
+    pctx.strokeStyle="#ef4444"; pctx.lineWidth=1.5;
+    pctx.beginPath(); pctx.moveTo(xP, y0); pctx.lineTo(xP, y1); pctx.stroke();
+  }
+  pctx.fillStyle="#94a3b8"; pctx.font="12px ui-monospace, monospace";
+  pctx.fillText(`${r.id}  Δ=${(dt).toFixed(3)}s  n=${n}  window=[${(t0).toFixed(2)}, ${(t1).toFixed(2)}] s`, x0, y0-6);
+  pctx.fillText(`Polarity: ${r.pol||'?'}`, x1-160, y0-6);
+}
+
+function updatePMeta(){
+  const r = rows[pickIndex];
+  document.getElementById('pTime').textContent = (r.pmark!=null? r.pmark.toFixed(3) : '–');
+  document.getElementById('pSuggest').textContent = r.psuggest || '–';
+}
+
+function openPicker(){
+  if(!rows.length){
+    pickList.innerHTML = '<div class="item"><div class="id">No stations loaded</div><div class="meta">Use SAC input, then try again</div></div>';
+    viewX.t0 = 0; viewX.t1 = 10;
+    modal.classList.add('show');
+    return;
+  }
+  pickList.innerHTML="";
+  rows.forEach((r,i)=>{
+    const div = document.createElement('div');
+    div.className = 'item' + (i===pickIndex?' active':'');
+    const label = r.id + (r.pol ? ` [${r.pol}]` : '');
+    div.innerHTML = `<div class="id">${label}</div><div class="meta">(${fmt(r.stla,3)}, ${fmt(r.stlo,3)})</div>`;
+    div.addEventListener('click', ()=>{ pickIndex=i; refreshPicker(); });
+    pickList.appendChild(div);
+  });
+  const r0 = rows[pickIndex];
+  const n=r0.data?.length||0, dt=r0.delta||0.01, b=r0.b||0;
+  viewX.t0 = b;
+  viewX.t1 = b + Math.min(20, n*dt);
+  refreshPicker();
+  modal.classList.add('show');
+}
+function closePicker(){ modal.classList.remove('show'); }
+function refreshPicker(){
+  [...pickList.children].forEach((el,idx)=>{ el.classList.toggle('active', idx===pickIndex); });
+  drawPick();
+  updatePMeta();
+}
+pickCanvas.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const r = rows[pickIndex]; if(!r||!r.data) return;
+  const n=r.data.length, dt=r.delta||0.01, b=r.b||0, tmax=b+n*dt;
+  const cx = viewX.t0 + (e.offsetX/pickCanvas.width)*(viewX.t1 - viewX.t0);
+  const scale = Math.exp(-e.deltaY*(e.altKey?0.0004:0.001));
+  const w = (viewX.t1 - viewX.t0) * scale;
+  const t0 = Math.max(b, cx - (cx - viewX.t0)*scale);
+  const t1 = Math.min(tmax, t0 + w);
+  viewX.t0 = t0; viewX.t1 = t1;
+  drawPick();
+},{passive:false});
+pickCanvas.addEventListener('mousedown', (e)=>{ panStart = {x:e.offsetX, t0:viewX.t0, t1:viewX.t1}; });
+pickCanvas.addEventListener('mouseup', (e)=>{
+  if(setPMode){
+    const r = rows[pickIndex]; if(!r) return;
+    const x0=50, x1=pickCanvas.width-10;
+    const t = viewX.t0 + (e.offsetX - x0)/(x1 - x0) * (viewX.t1 - viewX.t0);
+    r.pmark = t;
+    r.psuggest = suggestPolarity(r, t);
+    updatePMeta(); drawPick();
+  }
+  panStart=null;
+});
+pickCanvas.addEventListener('mouseleave', ()=> panStart=null);
+pickCanvas.addEventListener('mousemove', (e)=>{
+  if(!panStart || setPMode) return;
+  const r = rows[pickIndex]; if(!r||!r.data) return;
+  const w = (panStart.t1 - panStart.t0);
+  const dx = (e.offsetX - panStart.x)/pickCanvas.width;
+  const shift = -dx * w;
+  const n=r.data.length, dt=r.delta||0.01, b=r.b||0, tmax=b+n*dt;
+  let t0 = panStart.t0 + shift;
+  let t1 = panStart.t1 + shift;
+  if(t0<b){ t1+= (b-t0); t0=b; }
+  if(t1>tmax){ t0-= (t1-tmax); t1=tmax; }
+  viewX.t0=t0; viewX.t1=t1;
+  drawPick();
+});
+function setPolarity(sym){
+  const r = rows[pickIndex]; if(!r) return;
+  r.pol = sym;
+  drawPick();
+  renderTable();
+  drawStereo();
+}
+document.getElementById('btnPolPlus').addEventListener('click', ()=>setPolarity('+'));
+document.getElementById('btnPolMinus').addEventListener('click', ()=>setPolarity('−'));
+document.getElementById('btnPolUnknown').addEventListener('click', ()=>setPolarity('?'));
+document.getElementById('btnPrev').addEventListener('click', ()=>{ pickIndex = (pickIndex-1+rows.length)%rows.length; refreshPicker(); });
+document.getElementById('btnNext').addEventListener('click', ()=>{ pickIndex = (pickIndex+1)%rows.length; refreshPicker(); });
+document.getElementById('btnClose').addEventListener('click', ()=>{ setPMode=false; document.getElementById('btnSetP').classList.remove('primary'); closePicker(); });
+document.getElementById('btnSetP').addEventListener('click', ()=>{ setPMode = !setPMode; document.getElementById('btnSetP').classList.toggle('primary', setPMode); });
+document.getElementById('btnAccept').addEventListener('click', ()=>{
+  const r = rows[pickIndex]; if(!r) return;
+  if(r.psuggest) { r.pol = r.psuggest; drawPick(); renderTable(); drawStereo(); }
+});
+
+document.getElementById('btnAutoPickAll').addEventListener('click', ()=>{
+  autoPickPolarityAll();
+});
+window.addEventListener('keydown', (e)=>{
+  if(!modal.classList.contains('show')) return;
+  if(e.key==='+') setPolarity('+');
+  if(e.key==='-') setPolarity('−');
+  if(e.key==='?') setPolarity('?');
+  if(e.key==='ArrowLeft') { pickIndex = (pickIndex-1+rows.length)%rows.length; refreshPicker(); }
+  if(e.key==='ArrowRight'){ pickIndex = (pickIndex+1)%rows.length; refreshPicker(); }
+  if(e.key==='p' || e.key==='P'){ setPMode = !setPMode; document.getElementById('btnSetP').classList.toggle('primary', setPMode); }
+  if(e.key==='Enter'){ const r=rows[pickIndex]; if(r && r.psuggest){ r.pol=r.psuggest; refreshPicker(); renderTable(); drawStereo(); } }
+  if(e.key==='Escape') { setPMode=false; document.getElementById('btnSetP').classList.remove('primary'); closePicker(); }
+});
+
+/* ---------- File handlers ---------- */
+document.getElementById('vmodelFile').addEventListener('change', async (e)=>{ const f=e.target.files[0]; if(!f) return; parseVModel(await f.text()); });
+document.getElementById('sacFiles').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files||[]);
+  rows.length = 0; FM_SOLUTION = null; MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null}; MANUAL_MODE=false;
+  document.getElementById('np1').innerText='—'; document.getElementById('np2').innerText='—'; document.getElementById('fmscore').innerText='—';
+  let parsed=0, evSet=false;
+  const sacMap = new Map();
+  for(const f of files){
+    try{
+      const buf = await f.arrayBuffer();
+      const sac = parseSac(buf);
+      sac._fname = f.name;
+      if(sac.evla!=null && sac.evlo!=null && sac.evdp!=null && !evSet){
+        document.getElementById('evla').value = sac.evla.toFixed(4);
+        document.getElementById('evlo').value = sac.evlo.toFixed(4);
+        document.getElementById('evdp').value = sac.evdp.toFixed(1);
+        EV = {evla:sac.evla, evlo:sac.evlo, evdp:sac.evdp};
+        evSet = true;
+      }
+      // Always add trace, even if station coordinates are missing; use filename as fallback ID
+      const comp = sac.kcmpnm || "";
+      const baseId = (sac.kstnm && sac.kstnm.length) ? `${sac.knetwk || '-'}.${sac.kstnm}` : (sac._fname || 'trace');
+      const id = comp ? `${baseId}.${comp}` : baseId;
+      if(!sacMap.has(id)) sacMap.set(id, []);
+      sacMap.get(id).push(sac);
+    }catch(err){ console.warn("SAC parse error", f.name, err); }
+  }
+  for(const [id, sacs] of sacMap){
+    if(sacs.length === 1){
+      const sac = sacs[0];
+      rows.push({ id, net: sac.knetwk, sta: sac.kstnm, stla:sac.stla, stlo:sac.stlo, az:sac.az, baz:sac.baz, gcarc:sac.gcarc,
+                  dist_km: sac.dist_km, pol:"?", method:"", data: sac.data, delta: sac.delta, b: sac.b,
+                  pmark: null, psuggest: null });
+      parsed++;
+    }else{
+      // merge
+      sacs.sort((a,b)=> a.b - b.b);
+      let mergedData = new Float32Array(0);
+      let currentTime = sacs[0].b;
+      const delta = sacs[0].delta;
+      let deltaOk = true;
+      for(const sac of sacs){
+        if(Math.abs(sac.delta - delta) > 1e-6){ deltaOk = false; break; }
+      }
+      if(!deltaOk){
+        console.warn("Delta mismatch for", id, "skipping merge");
+        // push separately
+        for(const sac of sacs){
+          rows.push({ id: `${id}_${sac.b}`, net: sac.knetwk, sta: sac.kstnm, stla:sac.stla, stlo:sac.stlo, az:sac.az, baz:sac.baz, gcarc:sac.gcarc,
+                      dist_km: sac.dist_km, pol:"?", method:"", data: sac.data, delta: sac.delta, b: sac.b,
+                      pmark: null, psuggest: null });
+          parsed++;
+        }
+        continue;
+      }
+      for(const sac of sacs){
+        const gap = sac.b - currentTime;
+        if(gap > 0){
+          const gapSamples = Math.round(gap / delta);
+          if(gapSamples > 0){
+            const zeros = new Float32Array(gapSamples);
+            mergedData = concatFloat32(mergedData, zeros);
+            currentTime += gapSamples * delta;
+          }
+        }
+        mergedData = concatFloat32(mergedData, sac.data);
+        currentTime += sac.data.length * delta;
+      }
+      const firstSac = sacs[0];
+      rows.push({ id, net: firstSac.knetwk, sta: firstSac.kstnm, stla:firstSac.stla, stlo:firstSac.stlo, az:firstSac.az, baz:firstSac.baz, gcarc:firstSac.gcarc,
+                  dist_km: firstSac.dist_km, pol:"?", method:"", data: mergedData, delta: delta, b: firstSac.b,
+                  pmark: null, psuggest: null });
+      parsed++;
+    }
+  }
+  setDiag(`Loaded ${parsed} SAC file(s). ${evSet? 'Event set from first file.' : 'No EV info found; enter EVLA/EVLO/EVDP.'}`);
+  renderTable();
+});
+
+/* ---------- Solve & Export ---------- */
+document.getElementById('btnCompute').addEventListener('click', ()=>{
+  const evla=parseFloat(document.getElementById('evla').value);
+  const evlo=parseFloat(document.getElementById('evlo').value);
+  const evdp=parseFloat(document.getElementById('evdp').value);
+  EV={evla,evlo,evdp}; recompute();
+});
+
+document.getElementById('btnPick').addEventListener('click', openPicker);
+
+document.getElementById('btnSolveFM').addEventListener('click', ()=>{
+  if(rows.some(r=>!isFinite(r.tk))){
+    const evla=parseFloat(document.getElementById('evla').value);
+    const evlo=parseFloat(document.getElementById('evlo').value);
+    const evdp=parseFloat(document.getElementById('evdp').value);
+    EV={evla,evlo,evdp}; recompute();
+  }
+  const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+  if(picks.length < 8){ alert("Need at least 8 polarity picks (+/−)."); return; }
+  const gs = clamp(parseInt(document.getElementById('gStrike').value||10),1,30);
+  const gd = clamp(parseInt(document.getElementById('gDip').value||5),1,30);
+  const gr = clamp(parseInt(document.getElementById('gRake').value||10),1,60);
+  const refine = document.getElementById('refine').checked;
+  const solver = new FocalMechanismSolver(picks);
+  const sol = solver.solve(gs, gd, gr, refine);
+  if(!sol){ alert("Solver failed (no valid picks)."); return; }
+  // Choose physical fault plane and sign using polarities
+  const decision = chooseFaultPlaneByPolarities({strike: sol.strike, dip: sol.dip}, {strike: sol.aux.strike, dip: sol.aux.dip}, picks);
+  const magNP1 = Math.abs(((sol.rake + 180) % 360) - 180);
+  const magNP2 = Math.abs(((sol.aux.rake + 180) % 360) - 180);
+
+  let outNP1, outNP2;
+  if(decision.fault === 'np1'){
+    const signedR = decision.sign===0 ? (magNP1>=0? +magNP1 : -magNP1) : (decision.sign>0 ? +magNP1 : -magNP1);
+    const sdr1 = {strike: sol.strike, dip: sol.dip, rake: signedR};
+    const ns = FocalMechanismSolver.sdrToNS(sdr1.strike, sdr1.dip, sdr1.rake);
+    const aux = FocalMechanismSolver.nsToSdr(ns.s, ns.n);
+    outNP1 = sdr1; outNP2 = aux;
+    if(decision.sign!==0){
+      outNP1.rake = (decision.sign>0 ? Math.abs(outNP1.rake) : -Math.abs(outNP1.rake));
+      outNP2.rake = (decision.sign>0 ? Math.abs(outNP2.rake) : -Math.abs(outNP2.rake));
+    }
+  }else{
+    const signedR = decision.sign===0 ? (magNP2>=0? +magNP2 : -magNP2) : (decision.sign>0 ? +magNP2 : -magNP2);
+    const sdr2 = {strike: sol.aux.strike, dip: sol.aux.dip, rake: signedR};
+    const ns2 = FocalMechanismSolver.sdrToNS(sdr2.strike, sdr2.dip, sdr2.rake);
+    const aux1 = FocalMechanismSolver.nsToSdr(ns2.s, ns2.n);
+    outNP1 = sdr2; outNP2 = aux1; // swap to make fault plane the reported NP1
+    if(decision.sign!==0){
+      outNP1.rake = (decision.sign>0 ? Math.abs(outNP1.rake) : -Math.abs(outNP1.rake));
+      outNP2.rake = (decision.sign>0 ? Math.abs(outNP2.rake) : -Math.abs(outNP2.rake));
+    }
+  }
+
+  FM_SOLUTION = { ...sol, strike: outNP1.strike, dip: outNP1.dip, rake: outNP1.rake, aux: { strike: outNP2.strike, dip: outNP2.dip, rake: outNP2.rake } };
+  MANUAL_POINTS=[]; MANUAL_MODE=false; document.getElementById('manualHint').textContent="";
+  document.getElementById('np1').innerText = `Strike=${FM_SOLUTION.strike.toFixed(1)}°, Dip=${FM_SOLUTION.dip.toFixed(1)}°, Rake=${FM_SOLUTION.rake.toFixed(1)}°`;
+  document.getElementById('np2').innerText = `Strike=${FM_SOLUTION.aux.strike.toFixed(1)}°, Dip=${FM_SOLUTION.aux.dip.toFixed(1)}°, Rake=${FM_SOLUTION.aux.rake.toFixed(1)}°`;
+  document.getElementById('fmscore').innerText = `Fit: ${FM_SOLUTION.correct}/${FM_SOLUTION.used} = ${FM_SOLUTION.fitPct.toFixed(1)}% (wrong=${FM_SOLUTION.wrong}, nodal=${FM_SOLUTION.nodal})`;
+  drawStereo();
+});
+
+document.getElementById('btnExportFM').addEventListener('click', ()=>{
+  if(!FM_SOLUTION){ alert("No solution yet. Use Solve or Manual Select."); return; }
+  const s = FM_SOLUTION;
+  const lines = [];
+  lines.push("# Focal mechanism solution");
+  lines.push(`# Best NP1: strike dip rake (deg): ${s.strike.toFixed(2)} ${s.dip.toFixed(2)} ${s.rake.toFixed(2)}`);
+  lines.push(`# Aux  NP2: strike dip rake (deg): ${s.aux.strike.toFixed(2)} ${s.aux.dip.toFixed(2)} ${s.aux.rake.toFixed(2)}`);
+  lines.push(`# Fit: ${s.correct}/${s.used} = ${s.fitPct.toFixed(2)}% (wrong=${s.wrong}, nodal=${s.nodal})`);
+  lines.push("");
+  lines.push("NP1_strike\tNP1_dip\tNP1_rake\tNP2_strike\tNP2_dip\tNP2_rake\tcorrect\twrong\tnodal\tused\tfit_pct");
+  lines.push(`${s.strike.toFixed(2)}\t${s.dip.toFixed(2)}\t${s.rake.toFixed(2)}\t${s.aux.strike.toFixed(2)}\t${s.aux.dip.toFixed(2)}\t${s.aux.rake.toFixed(2)}\t${s.correct}\t${s.wrong}\t${s.nodal}\t${s.used}\t${s.fitPct.toFixed(2)}`);
+  downloadFile("fm_solution.txt", lines.join("\n"));
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  if(!rows.length) return alert("No rows to export.");
+  const lines = [];
+  lines.push("NET.STA\tSTLA\tSTLO\tEVLA\tEVLO\tEVDP\tAZ\tBAZ\tGCARC\tAZ used\tDist(km)\tTK(°)\tP_time(s)\tPOL\tMethod");
+  rows.forEach(r=>{
+    lines.push([r.id,fmt(r.stla,4),fmt(r.stlo,4),fmt(EV.evla,4),fmt(EV.evlo,4),fmt(EV.evdp,1),
+                fmt(r.az,1),fmt(r.baz,1),fmt(r.gcarc,2),fmt(r.az_used,1),fmt(r.dist_km,1),
+                fmt(r.tk_plot,1),fmt(r.ptime,2), r.pol||"?", r.method].join("\t"));
+  });
+  downloadFile("ang_results.txt", lines.join("\n"));
+  const polLines = rows.map(r=>`${r.id} ${Math.round(r.az_used||0).toString().padStart(8)}${Math.round(r.tk_plot||0).toString().padStart(8)}  ${r.pol||'?'}      ${(r.dist_km||0).toFixed(2).padStart(10)}${(r.ptime||0).toFixed(2).padStart(10)}`);
+  downloadFile("mypol.dat", polLines.join("\n"));
+});
+
+document.getElementById('btnDelete').addEventListener('click', ()=>{
+  if(rows.length === 0) return;
+  rows.splice(pickIndex, 1);
+  if(rows.length === 0){
+    closePicker();
+    return;
+  }
+  if(pickIndex >= rows.length) pickIndex = rows.length - 1;
+  openPicker();
+  renderTable();
+  drawStereo();
+});
+
+/* ---------- P/T Axes Display ---------- */
+(function(){
+  function axisStrikePlunge(vec) {
+    const plunge = toDeg(Math.acos(-vec[2])); // z positive down
+    let strike = toDeg(Math.atan2(vec[1], vec[0]));
+    strike = (strike + 360) % 360;
+    return {strike, plunge};
+  }
+
+  function updatePTAxesDisplay(){
+    if (!window.__PT_STATE__) return;
+    const P = window.__PT_STATE__.P;
+    const T = window.__PT_STATE__.T;
+    
+    let pAxis = axisStrikePlunge(P);
+    let tAxis = axisStrikePlunge(T);
+
+    // Apply corrections for P-axis
+    if (pAxis.plunge > 90) {
+      pAxis.plunge = pAxis.plunge - 90;
+    }
+
+    // Apply corrections for T-axis
+    if (tAxis.plunge > 90) {
+      tAxis.plunge = tAxis.plunge - 90;
+      tAxis.strike = (tAxis.strike + 180) % 360;
+    }
+
+    document.getElementById('p-axis').innerText = `Strike=${pAxis.strike.toFixed(1)}°, Plunge=${pAxis.plunge.toFixed(1)}°`;
+    document.getElementById('t-axis').innerText = `Strike=${tAxis.strike.toFixed(1)}°, Plunge=${tAxis.plunge.toFixed(1)}°`;
+  }
+
+  // Hook into beachball drawing to update display
+  if (typeof window.drawBeachball === 'function'){
+    var originalDrawBeachball = window.drawBeachball;
+    window.drawBeachball = function(M){
+      var result = originalDrawBeachball(M);
+      try{ updatePTAxesDisplay(); }catch(e){}
+      return result;
+    };
+  }
+
+  window.updatePTAxesDisplay = updatePTAxesDisplay;
+  if (document.readyState==='loading') {
+    document.addEventListener('DOMContentLoaded', updatePTAxesDisplay);
+  } else {
+    updatePTAxesDisplay();
+  }
+})();
+</script>
+
+
+
+</body>
+</html>
