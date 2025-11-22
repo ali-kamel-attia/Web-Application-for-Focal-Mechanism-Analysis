@@ -14,13 +14,13 @@ The code is a single, self-contained HTML file with embedded CSS and JavaScript.
   - A grid layout with two main columns.
   - Left column: Inputs for velocity model and SAC files, event coordinates, diagnostics, and a table of stations.
   - Right column: A stereonet canvas, controls for the beachball and P/T axes, and focal mechanism solution display.
-2.	The CSS styles the page with a dark theme and responsive layout.
+2.	The CSS styles the page with a dark theme and a responsive layout.
 3.	The JavaScript code is extensive and includes:
   - Utilities for math, file reading, and coordinate conversions.
   - A velocity model parser and interpolator.
   - A takeoff angle calculator using a Jansky method (ray tracing) and a fallback method.
   - SAC file parser (reading binary SAC files and extracting headers and data).
-  - Data model for stations (rows) and event (EV).
+  - Data model for stations (rows) and events (EV).
   - Functions to compute and render the stereonet and beachball.
   - A focal mechanism solver that uses a grid search over strike, dip, and rake, then refines.
   - Functions for manual picking of nodal planes and poles on the stereonet.
@@ -53,7 +53,7 @@ Key Features:
 •	Computes station azimuths, back-azimuths, and distances
 4. Focal Mechanism Solving
 •	Automated grid search over strike, dip, and rake parameters
-•	Manual nodal plane selection by clicking on stereonet
+•	Manual nodal plane selection by clicking on the stereonet
 •	Polarity-based scoring to find best-fitting solutions
 •	Refinement around best solutions
 5. Visualization
@@ -62,7 +62,7 @@ Key Features:
 •	Station polarities plotted as colored symbols (red = compression, blue = dilation)
 •	P and T axis markers
 6. Advanced Features
-•	Manual mode: Define fault planes by picking points A, B, C on stereonet
+•	Manual mode: Define fault planes by picking three points on the stereonet
 •	Real-time solution updates as picks change
 •	Export results as tables, images (PNG), and focal mechanism solutions
 •	Responsive design with dark theme
@@ -72,7 +72,7 @@ Workflow:
 3.	Pick P-wave polarities manually or automatically
 4.	Compute takeoff angles and station parameters
 5.	Solve for focal mechanism (automatically or manually)
-6.	Visualize results on stereonet with beachball
+6.	Visualize results on a stereonet with a beachball
 7.	Export final solutions
 This tool essentially replicates functionality that would traditionally require multiple specialized seismology software packages, all in a single web interface.
 
