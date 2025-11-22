@@ -34,7 +34,7 @@ The application allows the user to:
   - Solve for the focal mechanism using the polarities.
   - Manually define the focal mechanism by clicking on the stereonet (two points for the first plane and one for the second).
   - Export the results and the stereonet as PNG.
-The code is well-structured but quite long (over 1500 lines of JavaScript). It uses modern JavaScript features and the Canvas API for drawing. Note that the code includes a custom SAC parser that attempts to read both little-endian and big-endian SAC files and merge multiple SAC files for the same station. The focal mechanism solver (FocalMechanismSolver) uses a grid search over strike, dip, and rake, then refines the solution. It scores each candidate by comparing the predicted polarity (from the moment tensor) with the observed polarity. The stereonet is a lower-hemisphere equal-area projection. The beachball is drawn by evaluating the sign of the radiation pattern on a grid and filling accordingly. The code then computes the strike, dip, and rake for the two planes and chooses the one that fits the polarities best. The picker modal displays the waveform and allows the user to set the P arrival time and polarity.
+The code is well-structured but quite long (over 1500 lines of JavaScript). It uses modern JavaScript features and the Canvas API for drawing. Note that the code includes a custom SAC parser that attempts to read both little-endian and big-endian SAC files and merge multiple SAC files for the same station. The Focal Mechanism Solver (FocalMechanismSolver) employs a grid search over strike, dip, and rake, refining the solution accordingly. It scores each candidate by comparing the predicted polarity (from the moment tensor) with the observed polarity. The stereonet is a lower-hemisphere equal-area projection. The beachball is drawn by evaluating the sign of the radiation pattern on a grid and filling accordingly. The code then computes the strike, dip, and rake for the two planes and selects the one that best fits the polarities. The picker modal displays the waveform and allows the user to set the P arrival time and polarity.
 This is a sophisticated web application for seismological analysis, specifically for focal mechanism determination from P-wave first motions. This is a web-based seismology tool for focal mechanism analysis called FMSAC Web. It's a comprehensive application that allows seismologists to determine earthquake focal mechanisms (the orientation of fault planes and slip direction) from seismic wave data.
 
 Key Features:
@@ -57,7 +57,7 @@ Key Features:
 •	Polarity-based scoring to find best-fitting solutions
 •	Refinement around best solutions
 5. Visualization
-•	Upper-hemisphere stereonet display
+•	Lower-hemisphere stereonet display
 •	Beachball diagrams showing focal mechanism solutions
 •	Station polarities plotted as colored symbols (red = compression, blue = dilation)
 •	P and T axis markers
