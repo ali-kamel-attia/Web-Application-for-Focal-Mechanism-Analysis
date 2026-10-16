@@ -1,0 +1,3018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>FMSAC Web — Manual FM + Custom Polarity + Beachball</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb;
+    --accent:#22d3ee; --accent2:#a78bfa; --ok:#34d399; --warn:#f59e0b; --err:#ef4444;
+    --card:#0b1220; --border:#1f2937;
+    --np1:#34d399; --np2:#a78bfa; --pt:#ef4444; --tt:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:linear-gradient(180deg,#0a0f1d 0%, #0f172a 20%, #0f172a 100%);
+       color:var(--text); font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, sans-serif;}
+  .wrap{max-width:1240px; margin:24px auto; padding:0 16px;}
+  h1{font-size:24px; margin:0 0 8px;}
+  .subtitle{color:var(--muted); margin-bottom:20px}
+  .grid{display:grid; grid-template-columns:1.05fr 0.95fr; gap:16px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 14px 10px}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .col{display:flex; flex-direction:column; gap:6px}
+  label{font-size:12px; color:var(--muted)}
+  input[type="text"], input[type="number"], textarea, select{
+    background:#0a1220; border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:8px 10px; outline:none; min-width:0;
+  }
+  input[type="file"]{color:var(--muted)}
+  button{background:linear-gradient(90deg,var(--accent), var(--accent2)); color:#0b1220;
+         border:0; padding:8px 12px; border-radius:999px; cursor:pointer; font-weight:600;}
+  button.secondary{ background:#111827; color:var(--text); border:1px solid var(--border); }
+  button.ghost{ background:transparent; color:var(--muted); border:1px dashed var(--border); }
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  thead th{position:sticky; top:0; background:var(--panel); color:#cbd5e1; text-align:left; padding:8px; border-bottom:1px solid var(--border)}
+  tbody td{padding:8px; border-bottom:1px dashed var(--border); color:#d1d5db}
+  tbody tr:hover{background:#0c1424}
+  .badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border); background:#0c1424; color:#cbd5e1}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .err{color:var(--err)}
+  .pill{display:inline-flex; padding:4px 8px; background:#0c1424; border:1px solid var(--border); border-radius:999px; gap:6px; align-items:center}
+  .stereo-wrap{position:relative; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:8px}
+  canvas{display:block; width:100%; height:auto; background:#0a1220; border-radius:12px}
+  .small{font-size:12px; color:var(--muted)}
+  .right{margin-left:auto}
+  .mt8{margin-top:8px} .mt12{margin-top:12px} .mt16{margin-top:16px} .mt20{margin-top:20px}
+  .legend{position:absolute; top:8px; left:8px; padding:6px 8px; background:#0b1220bb; border:1px solid var(--border); border-radius:8px; font-size:12px; color:#cbd5e1}
+  .legend span{display:inline-block; width:12px; height:2px; margin-right:6px; vertical-align:middle}
+  .legend .np1{background:var(--np1)} .legend .np2{background:var(--np2)}
+  .legend .pp{background:var(--pt); height:6px; width:6px; border-radius:50%; display:inline-block; margin-right:6px}
+  .legend .tt{background:var(--tt); height:6px; width:6px; border-radius:50%; display:inline-block; margin-right:6px}
+
+  /* Picker Modal Styles */
+  .modal{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.95); z-index:1000; display:none; align-items:center; justify-content:center;}
+  .modal.show{display:flex;}
+  .picker{display:flex; width:98%; height:96%; background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+  .picker .list{width:220px; flex:0 0 220px; border-right:1px solid var(--border); overflow-y:auto; background:var(--panel);}
+  .picker .list .item{padding:12px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.2s;}
+  .picker .list .item:hover{background:#0c1424;}
+  .picker .list .item.active{background:var(--accent); color:#0b1220; font-weight:600;}
+  .picker .list .item .id{font-weight:500;}
+  .picker .list .item .meta{font-size:11px; color:var(--muted); margin-top:2px;}
+  .picker .list .item.active .meta{color:#0b1220;}
+  .picker .plot{flex:1; display:flex; flex-direction:column;}
+  .picker .plot .toolbar{display:flex; align-items:center; padding:12px; border-bottom:1px solid var(--border); background:var(--panel); gap:8px; flex-wrap:wrap;}
+  .picker .plot .toolbar .btn{padding:6px 12px; background:var(--card); border:1px solid var(--border); border-radius:6px; color:var(--text); cursor:pointer; font-size:12px;}
+  .picker .plot .toolbar .btn.primary{background:linear-gradient(90deg,var(--accent), var(--accent2)); color:#0b1220;}
+  .picker .plot .toolbar .status{font-size:11px; color:var(--muted); margin-left:auto;}
+  .picker .plot{min-width:0;}
+  .picker .plot .toolbar.tb2{padding:8px 12px; background:#0e1626;}
+  .picker .plot .toolbar select{padding:4px 8px; font-size:12px;}
+  .picker .plot .toolbar .btn.primary{color:#0b1220;}
+  .pickwrap{flex:1 1 auto; min-height:240px; position:relative; margin:8px 12px;}
+  .pickwrap canvas{position:absolute; left:0; top:0; width:100%; height:100%; margin:0; border-radius:8px; cursor:crosshair;}
+
+  /* Rake Results Styles */
+  #rake-results.card { margin-top: 10px; }
+  #rake-results table { width: 100%; border-collapse: collapse; }
+  #rake-results th, #rake-results td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12.5px; }
+  #rake-results thead th { text-align: left; opacity: .95; }
+
+  /* Uncertainty & Frohlich panel */
+  #uqCard{margin-top:16px; position:relative;}
+  #uqCard .uq-ctl{gap:8px 12px; align-items:center;}
+  #uqCard .uq-ctl input[type=number]{width:84px; padding:6px 8px;}
+  #uqCard .uq-ctl select{padding:6px 8px;}
+  #uqCard .uq-prog{height:6px; background:#111827; border-radius:999px; overflow:hidden; margin-top:10px; border:1px solid var(--border);}
+  #uqCard .uq-prog>div{height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .1s;}
+  #uqTabs{margin-top:12px; gap:6px; border-bottom:1px solid var(--border); padding-bottom:8px;}
+  #uqTabs button{background:transparent; color:var(--muted); border:1px solid var(--border); padding:6px 14px;}
+  #uqTabs button.on{background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#0b1220; border-color:transparent;}
+  #uqCard .uq-panel{display:none; margin-top:12px;}
+  #uqCard canvas{border-radius:10px; max-width:100%;}
+  #uqCard .uq-flex{display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;}
+  #uqCard .uq-t{width:100%; border-collapse:collapse; font-size:12.5px;}
+  #uqCard .uq-t th{position:static; background:#0c1424; padding:6px 8px;}
+  #uqCard .uq-t td{padding:5px 8px;}
+  #uqCard .uq-t tr[data-k]{cursor:pointer;}
+  #uqCard .uq-t tr.sel td{background:#13203a;}
+  #uqCard .sw{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle;}
+  #uqCard .bar{position:relative; height:16px; background:#0a1220; border:1px solid var(--border); border-radius:4px; min-width:90px;}
+  #uqCard .bar i{position:absolute; left:0; top:0; bottom:0; opacity:.55; border-radius:3px;}
+  #uqCard .bar b{position:relative; font-weight:600; font-size:11px; padding-left:6px; line-height:14px;}
+  #uqCard .uq-kv{display:grid; grid-template-columns:max-content 1fr; gap:4px 14px; font-size:12.5px; margin-top:10px;}
+  #uqCard .uq-kv span{color:var(--muted);}
+  #uqCard .uq-grid{display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;}
+  #uqCard .uq-grade{width:110px; text-align:center; border:3px solid; border-radius:16px; padding:10px 0; background:#0a1220;}
+  #uqCard .uq-grade .g{font-size:48px; font-weight:800; line-height:1;}
+  #uqCard .uq-notes{margin:0; padding-left:0; list-style:none; font-size:12.5px;}
+  #uqCard .uq-notes li{padding:3px 0;}
+  #uqCard .uq-notes li.ok{color:#86efac;} #uqCard .uq-notes li.warn{color:#fcd34d;} #uqCard .uq-notes li.info{color:#93c5fd;}
+  #uqCard .uq-opts{gap:6px 14px; margin-bottom:8px;}
+  #uqCard .uq-opts label{display:inline-flex; align-items:center; gap:4px; color:var(--text);}
+  #uqCard .uq-tip{display:none; position:absolute; z-index:5; pointer-events:none; background:rgba(8,13,25,0.96); border:1px solid #334155; border-radius:8px; padding:6px 9px; font-size:12px; line-height:1.4; max-width:250px;}
+  #uqCard .uq-stale{background:#3b2a07; border:1px solid #92610a; color:#fcd34d; border-radius:8px; padding:6px 10px; margin-top:8px; display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FMSAC Web</h1>
+  <div class="subtitle">Polarity symbols customized • Manual nodal-plane picking • Reset • Beachball • P/T • PNG export.</div>
+
+  <div class="grid">
+    <div class="col" style="gap:16px">
+      <div class="card">
+        <div class="row">
+          <div class="col">
+            <label>Velocity model (vmodel.dat)</label>
+            <input id="vmodelFile" type="file" accept=".dat,.txt"/>
+            <div class="small">Format: <code>depth vp [vs density]</code></div>
+          </div>
+          <div class="col">
+            <label>SAC files</label>
+            <input id="sacFiles" type="file" multiple accept=".SAC,.sac"/>
+            <div class="small">Reads headers + float32 data; uses KNETWK and KSTNM when present.</div>
+          </div>
+          <div class="right">
+            <button id="btnPick" class="secondary">Pick Polarities</button>
+            <button id="btnCompute">Compute Angles</button>
+            <button id="btnExport" class="ghost">Export Table</button>
+          </div>
+        </div>
+        <div class="row mt8">
+          <span class="badge">Event</span>
+          <div class="row">
+            <label>EVLA</label><input id="evla" type="number" step="0.0001" style="width:120px">
+            <label>EVLO</label><input id="evlo" type="number" step="0.0001" style="width:120px">
+            <label>EVDP(km)</label><input id="evdp" type="number" step="0.1" style="width:100px">
+          </div>
+          <div class="right pill"><span class="small">SAC files</span><span id="sacCount" class="small">0</span></div>
+        </div>
+        <div class="row mt8">
+          <span class="badge">Diagnostics</span>
+          <span id="diag" class="small">No run yet.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <span class="badge">Stations</span>
+          <span class="small">Polarity column is linked to your seismogram picks.</span>
+        </div>
+        <div class="mt8" style="max-height:360px; overflow:auto; border:1px solid var(--border); border-radius:10px">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>ID</th><th>STLA</th><th>STLO</th><th>AZ</th><th>BAZ</th><th>GCARC</th>
+                <th>Dist(km)</th><th>TK(°)</th><th>P_time(s)</th><th>Pol</th><th>Method</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="gap:16px">
+      <div class="card stereo-wrap">
+        <div class="row" style="align-items:flex-end">
+          <span class="badge">Upper-Hemisphere Stereonet</span>
+          <div class="right small" style="display:flex; gap:10px; align-items:center">
+            <label class="small"><input id="showBeachball" type="checkbox" checked> beachball</label>
+            <label class="small"><input id="showPT" type="checkbox" checked> show P/T</label>
+            <button id="btnExportPNG" class="ghost">Export PNG</button>
+          </div>
+        </div>
+        <div class="legend"><span class="np1"></span>NP1 &nbsp;&nbsp; <span class="np2"></span>NP2 &nbsp;&nbsp; <span class="pp"></span>P &nbsp;&nbsp; <span class="tt"></span>T</div>
+        <canvas id="stereo" width="800" height="800"></canvas>
+        <div id="manualHint" class="small" style="position:absolute; bottom:8px; left:12px; color:#94a3b8"></div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="align-items:flex-start">
+          <div class="col" style="flex:1">
+            <div class="row">
+              <span class="badge">Focal Mechanism</span>
+              <div class="right" style="display:flex; gap:6px">
+                <button id="btnManual" class="ghost">Manual Select</button>
+                <button id="btnResetFM" class="ghost">Reset</button>
+                <button id="btnSolveFM" class="secondary">Solve</button>
+                <button id="btnExportFM" class="ghost">Export FM</button>
+              </div>
+            </div>
+            <div class="row mt8">
+              <label>Grid (°)</label>
+              <input id="gStrike" type="number" value="10" min="1" max="30" step="1" style="width:70px">
+              <input id="gDip"    type="number" value="5"  min="1" max="30" step="1" style="width:70px">
+              <input id="gRake"   type="number" value="10" min="1" max="60" step="1" style="width:70px">
+              <label class="small"><input id="refine" type="checkbox" checked> refine near best</label>
+            </div>
+            <div class="row mt8">
+              <span class="small">Manual mode: click NP1 pole (fault normal), then NP2 pole (slip). We'll orthogonalize & update SDR.</span>
+            </div>
+          </div>
+          <div class="col" style="flex:1">
+            <div class="row"><span class="badge">Best (NP1)</span></div>
+            <div class="row small mt8" id="np1">—</div>
+            <div class="row"><span class="badge">Aux (NP2)</span></div>
+            <div class="row small mt8" id="np2">—</div>
+            <div class="row mt8 small" id="fmscore">—</div>
+            <div class="row"><span class="badge">P-axis</span></div>
+            <div class="row small mt8" id="p-axis">—</div>
+            <div class="row"><span class="badge">T-axis</span></div>
+            <div class="row small mt8" id="t-axis">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="wrap" style="margin-top:0"><div class="card" id="uqCard">
+    <div class="row">
+      <span class="badge">Uncertainty &amp; Frohlich classification</span>
+      <span class="small">Bayesian inference · bootstrap · Monte Carlo — confidence bounds on fault planes and principal axes, with Frohlich triangle classification.</span>
+      <div class="right row" style="gap:6px">
+        <button id="uqExportCSV" class="ghost" disabled>Export samples (CSV)</button>
+        <button id="uqExportTxt" class="ghost" disabled>Export summary</button>
+        <button id="uqPNG" class="ghost" disabled>Save figure (PNG)</button>
+      </div>
+    </div>
+    <div class="row mt8 uq-ctl">
+      <label>Method</label>
+      <select id="uqMethod" title="Bayesian MCMC samples the posterior of strike/dip/rake and the polarity-error rate; bootstrap re-solves with resampled stations; Monte Carlo perturbs azimuth, take-off angle and polarities.">
+        <option value="mcmc" selected>Bayesian MCMC</option><option value="bootstrap">Bootstrap (resample stations)</option><option value="mc">Monte Carlo (perturb inputs)</option>
+      </select>
+      <label title="MCMC: total iterations over 4 chains (up to 2000 thinned samples kept). Bootstrap / Monte Carlo: number of re-solved data sets.">Samples</label><input id="uqN" type="number" value="20000" min="100" max="200000" step="500">
+      <label title="Prior / assumed probability that a polarity pick is wrong">Polarity error ε</label><input id="uqEps" type="number" value="0.05" min="0.001" max="0.3" step="0.01">
+      <label title="Softness of the nodal planes: amplitude scale that absorbs location/velocity-model error">Nodal softness σ</label><input id="uqSig" type="number" value="0.1" min="0.01" max="1" step="0.01">
+      <span id="uqMcOnly" class="row" style="display:none; gap:8px">
+        <label>σ azimuth (°)</label><input id="uqSigAz" type="number" value="10" min="0" max="60" step="1">
+        <label>σ take-off (°)</label><input id="uqSigTk" type="number" value="5" min="0" max="40" step="1">
+      </span>
+      <label>Seed</label><input id="uqSeed" type="number" value="12345" step="1">
+      <label title="Plunge (degrees) above which one axis dominates in the Frohlich classification">Class threshold (°)</label><input id="uqThr" type="number" value="60" min="45" max="80" step="1">
+      <button id="uqRun" class="secondary">Run analysis</button>
+    </div>
+    <div class="uq-prog"><div id="uqBar"></div></div>
+    <div id="uqStatus" class="small mt8">Uses the current solution (or the best fit) as reference and the polarity picks in the station table.</div>
+    <div id="uqStale" class="uq-stale small">Picks or the reference solution changed since this analysis was run — run it again to update the results.</div>
+    <div class="row" id="uqTabs">
+      <button data-t="summary" class="on">Summary</button><button data-t="params">Parameters &amp; distributions</button><button data-t="axes">Planes &amp; axes</button><button data-t="froh">Frohlich triangle</button><button data-t="stn">Stations</button>
+    </div>
+    <div class="uq-panel" data-t="summary" id="uqPanelSummary"></div>
+    <div class="uq-panel" data-t="params" id="uqPanelParams"><div id="uqParamTable"></div><div class="mt12"><canvas id="uqHist" width="900" height="460"></canvas></div></div>
+    <div class="uq-panel" data-t="axes" id="uqPanelAxes">
+      <div class="row uq-opts small">
+        <label><input id="uqOptNP1" type="checkbox" checked> NP1 planes</label><label><input id="uqOptNP2" type="checkbox" checked> NP2 planes</label>
+        <label><input id="uqOptP" type="checkbox" checked> P axes</label><label><input id="uqOptT" type="checkbox" checked> T axes</label><label><input id="uqOptB" type="checkbox" checked> B axes</label>
+        <label><input id="uqOptCones" type="checkbox" checked> 68/95 % cones</label>
+        <label>planes shown <input id="uqOptPlanes" type="range" min="10" max="300" value="120" style="width:120px"></label>
+        <span class="small">Hover a point for details. Highlight a Frohlich class on the Frohlich tab to colour-filter these plots.</span>
+      </div>
+      <canvas id="uqStereo" width="560" height="560"></canvas>
+    </div>
+    <div class="uq-panel" data-t="froh" id="uqPanelFroh">
+      <div class="row uq-opts small">
+        <label><input id="uqOptEns" type="checkbox" checked> ensemble</label><label><input id="uqOptCat" type="checkbox" checked> catalog</label>
+        <label><input id="uqOptBounds" type="checkbox" checked> class regions</label><label><input id="uqOptGrid" type="checkbox" checked> grid</label>
+        <span style="width:12px"></span>
+        <label class="small">Catalog (strike dip rake per line)</label>
+        <input id="uqCatFile" type="file" accept=".txt,.csv,.dat" style="max-width:210px">
+        <button id="uqCatAdd" class="ghost">Add current solution</button><button id="uqCatClear" class="ghost">Clear catalog</button>
+      </div>
+      <div class="uq-flex"><canvas id="uqTern" width="600" height="560"></canvas><div id="uqFrohSide" style="flex:1; min-width:300px"></div></div>
+      <div class="small mt8">Frohlich triangle: the three corners are pure normal (P axis vertical), thrust (T vertical) and strike-slip (B vertical) faulting. A point is placed by sin² of the plunge of each axis (the three values sum to 1). A mechanism is <i>Normal / Thrust / Strike-slip</i> when that axis plunges at least the threshold; otherwise it is <i>oblique</i>, named after its steepest axis (P: normal-oblique, T: thrust-oblique, B: odd).</div>
+    </div>
+    <div class="uq-panel" data-t="stn" id="uqPanelStn"></div>
+    <div class="uq-tip" id="uqTip"></div>
+  </div>
+</div>
+
+<!-- Modal for picker -->
+<div class="modal" id="modal">
+  <div class="picker">
+    <div class="list" id="pickList"></div>
+    <div class="plot">
+      <div class="toolbar">
+        <button class="btn" id="btnPrev">◀ Prev</button>
+        <button class="btn" id="btnNext">Next ▶</button>
+        <div class="row" style="gap:6px; margin-left:8px">
+          <span class="small">Filter:</span>
+          <label class="small">HP(Hz)</label><input id="hpHz" type="number" step="0.1" style="width:70px" value="0.5">
+          <label class="small">LP(Hz)</label><input id="lpHz" type="number" step="0.1" style="width:70px" value="15">
+          <label class="small"><input id="doFilt" type="checkbox" checked> apply</label>
+          <label class="small"><input id="doNorm" type="checkbox" checked> normalize</label>
+        </div>
+        <div class="right"></div>
+        <button class="btn primary" id="btnSetP" title="Click on the waveform sets the P mark (P)">Set P</button>
+        <button class="btn" id="btnDelete">Delete</button>
+        <span class="status" id="pickStatus">Click = set P · drag = pan · wheel = zoom · Shift+drag = zoom box</span>
+        <button class="btn primary" id="btnClose">Done</button>
+      </div>
+      <div class="toolbar tb2">
+        <span class="small">Window</span>
+        <select id="pkWin" title="Time window around the P mark">
+          <option value="0.5,1">−0.5 / +1 s</option>
+          <option value="1,2" selected>−1 / +2 s</option>
+          <option value="1,3">−1 / +3 s</option>
+          <option value="2,5">−2 / +5 s</option>
+          <option value="5,15">−5 / +15 s</option>
+          <option value="full">Full trace</option>
+          <option value="custom">Custom</option>
+        </select>
+        <button class="btn" id="btnZoomOut" title="Zoom out (O)">⊖</button>
+        <button class="btn" id="btnZoomIn" title="Zoom in (I)">⊕</button>
+        <button class="btn" id="btnZoomP" title="Window around the P mark (Z)">Onset</button>
+        <button class="btn" id="btnZoomFull" title="Whole trace (F)">Full</button>
+        <button class="btn" id="btnZoomBox" title="Drag a time box to zoom (or Shift+drag)">Zoom box</button>
+        <span class="small" style="margin-left:10px">Amplitude</span>
+        <button class="btn" id="btnAmpDn" title="Lower gain (↓)">−</button>
+        <button class="btn" id="btnAmpUp" title="Raise gain (↑)">+</button>
+        <select id="pkScale" title="Onset scale: fit the first 0.5 s after P (best for first motion)">
+          <option value="onset" selected>Onset scale</option>
+          <option value="window">Window max</option>
+        </select>
+        <label class="small"><input id="pkAutoNext" type="checkbox"> auto-next</label>
+        <span class="small" style="margin-left:auto">I/O zoom · Z onset · F full · ↑/↓ gain · Shift+←/→ pan · , . nudge P · +/−/? polarity · ←/→ station</span>
+      </div>
+      <div class="pickwrap" id="pickWrap"><canvas id="pickCanvas" width="820" height="500"></canvas></div>
+      <div class="row mt8" style="gap:10px; padding:0 12px 12px;">
+        <div class="small">P at <span id="pTime">–</span> s. Suggestion: <span id="pSuggest">–</span></div>
+        <button class="btn" id="btnAccept">Accept Suggestion</button>
+        <button class="btn" id="btnAutoPickAll">Auto Pick All</button>
+        <div class="right"></div>
+        <button class="btn" id="btnPolPlus">+</button>
+        <button class="btn" id="btnPolMinus">−</button>
+        <button class="btn" id="btnPolUnknown">?</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Utilities ---------- */
+const R_EARTH = 6371.0;
+function toRad(d){return d*Math.PI/180} function toDeg(r){return r*180/Math.PI}
+function clamp(v,a,b){return Math.max(a, Math.min(b, v));}
+function haversineKm(lat1, lon1, lat2, lon2){
+  const φ1=toRad(lat1), φ2=toRad(lat2), dφ=toRad(lat2-lat1), dλ=toRad(lon2-lon1);
+  const A = Math.sin(dφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(dλ/2)**2;
+  return 2*R_EARTH*Math.asin(Math.sqrt(A));
+}
+function azimuth(lat1, lon1, lat2, lon2){
+  const φ1=toRad(lat1), φ2=toRad(lat2), Δλ=toRad(lon2-lon1);
+  const x = Math.sin(Δλ)*Math.cos(φ2);
+  const y = Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  let az = toDeg(Math.atan2(x,y)); if(az<0) az+=360; return az;
+}
+function fmt(x,n){return (x==null||!isFinite(x))? "" : Number(x).toFixed(n);}
+function downloadFile(name, content){
+  const blob = new Blob([content], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+function concatFloat32(a, b){
+  const c = new Float32Array(a.length + b.length);
+  c.set(a);
+  c.set(b, a.length);
+  return c;
+}
+
+/* ---------- Velocity model ---------- */
+let VMODEL = [];
+function parseVModel(text){
+  const rows=[];
+  text.split(/\r?\n/).forEach(line=>{
+    const t=line.trim(); if(!t||t.startsWith('#')) return;
+    const p = t.split(/\s+/).map(Number);
+    if(p.length>=2){
+      const depth=p[0], vp=p[1], vs=p[2]||vp/1.73, rho=p[3]||2.7;
+      rows.push({depth, vp, vs, rho});
+    }
+  });
+  rows.sort((a,b)=>a.depth-b.depth);
+  VMODEL = rows;
+}
+function vpAtDepth(depth){
+  if(!VMODEL.length) return 6.0;
+  if(depth<=VMODEL[0].depth) return VMODEL[0].vp;
+  for(let i=0;i<VMODEL.length-1;i++){
+    const a=VMODEL[i], b=VMODEL[i+1];
+    if(depth>=a.depth && depth<b.depth){
+      const t=(depth-a.depth)/(b.depth-a.depth);
+      return a.vp + t*(b.vp-a.vp);
+    }
+  }
+  return VMODEL[VMODEL.length-1].vp;
+}
+
+/* ---------- Jansky-style takeoff ---------- */
+function distanceFromAlpha(alphaDeg, depthKm){
+  const r0 = R_EARTH - depthKm;
+  const v0 = vpAtDepth(depthKm);
+  const alpha0 = toRad(alphaDeg);
+  const p = r0*Math.sin(alpha0)/v0;
+  let r=r0, theta=0;
+  const ds=5.0, stepsMax=20000;
+  function derivs(r,theta){
+    const z = Math.max(0, R_EARTH - r);
+    const v = vpAtDepth(z);
+    const pv_over_r = (p*v)/r;
+    if(pv_over_r>0.999999) return [NaN,NaN];
+    const sqrtTerm = Math.sqrt(1 - pv_over_r*pv_over_r);
+    return [sqrtTerm, (p*v)/(r*r)];
+  }
+  for(let n=0;n<stepsMax && r<R_EARTH; n++){
+    const [k1r,k1t] = derivs(r,theta); if(!isFinite(k1r)) return NaN;
+    const [k2r,k2t] = derivs(r+0.5*ds*k1r, theta+0.5*ds*k1t); if(!isFinite(k2r)) return NaN;
+    const [k3r,k3t] = derivs(r+0.5*ds*k2r, theta+0.5*ds*k2t); if(!isFinite(k3r)) return NaN;
+    const [k4r,k4t] = derivs(r+ds*k3r, theta+ds*k3t); if(!isFinite(k4r)) return NaN;
+    r     += (ds/6)*(k1r+2*k2r+2*k3r+k4r);
+    theta += (ds/6)*(k1t+2*k2t+2*k3t+k4t);
+  }
+  return toDeg(theta)*111.32;
+}
+function takeoffAngle(distanceKm, depthKm){
+  try{
+    const f = (a)=>distanceFromAlpha(a, depthKm);
+    const grid=[]; const N=36;
+    for(let i=0;i<=N;i++){ const a=i*(180/N); grid.push({a,d:f(a)}); }
+    const clean = grid.filter(g=>isFinite(g.d));
+    if(clean.length<2) throw new Error("no rays");
+    clean.sort((u,v)=>Math.abs(u.d-distanceKm)-Math.abs(v.d-distanceKm));
+    const best = clean[0];
+    const sorted = clean.slice().sort((u,v)=>u.a-v.a);
+    let idx = sorted.findIndex(x=>x.a===best.a), lo, hi;
+    const sign = (x)=> x>=distanceKm?1:-1;
+    let s0 = sign(best.d);
+    for(let i=idx-1;i>=0;i--){ const s=sign(sorted[i].d); if(s!==s0){ lo=sorted[i].a; hi=best.a; break; } }
+    if(lo===undefined){ for(let i=idx+1;i<sorted.length;i++){ const s=sign(sorted[i].d); if(s!==s0){ lo=best.a; hi=sorted[i].a; break; } } }
+    if(lo===undefined) throw new Error("no bracket");
+    let fla=f(lo), fha=f(hi);
+    for(let it=0; it<40; it++){
+      const mid=0.5*(lo+hi), fmid=f(mid);
+      if(Math.abs(fmid-distanceKm)<0.2) return {angle:mid, method:"jansky"};
+      const sL=(fla-distanceKm), sM=(fmid-distanceKm);
+      if(sL*sM<=0){ hi=mid; fha=fmid; } else { lo=mid; fla=fmid; }
+    }
+    return {angle:0.5*(lo+hi), method:"jansky"};
+  }catch(e){
+    if(depthKm<=0) return {angle:90, method:"fallback"};
+    const inc = Math.atan2(distanceKm, depthKm);
+    return {angle:180 - toDeg(inc), method:"fallback"};
+  }
+}
+
+/* ---------- Filters ---------- */
+function lowpassFirstOrder(x, dt, fc){
+  if(!fc || fc<=0) return x.slice();
+  const RC = 1/(2*Math.PI*fc), alpha = dt/(RC+dt);
+  const y = new Float32Array(x.length);
+  let out = x[0]; y[0]=out;
+  for(let i=1;i<x.length;i++){ out += alpha*(x[i]-out); y[i] = out; }
+  return y;
+}
+function highpassFirstOrder(x, dt, fc){
+  if(!fc || fc<=0) return x.slice();
+  const RC = 1/(2*Math.PI*fc), alpha = RC/(RC+dt);
+  const y = new Float32Array(x.length);
+  let prevX = x[0], out = x[0]; y[0]=0;
+  for(let i=1;i<x.length;i++){ out = alpha*(out + x[i] - prevX); y[i] = out; prevX = x[i]; }
+  return y;
+}
+function bandpass(x, dt, hp, lp){
+  let y = x; if(hp && hp>0) y = highpassFirstOrder(y, dt, hp); if(lp && lp>0) y = lowpassFirstOrder(y, dt, lp); return y;
+}
+
+/* ---------- SAC parser ---------- */
+const FIDX = { DELTA:0, B:5, E:6, O:7, A:8, STLA:31, STLO:32, EVLA:35, EVLO:36, EVDP:38, DIST:50, AZ:51, BAZ:52, GCARC:53 };
+const SAC_UNDEF = -12345.0; const HEADER_SIZES = [632, 652];
+function cleanVal(x){ return (!isFinite(x) || Math.abs(x-SAC_UNDEF)<1e-3) ? null : x; }
+function readCharFields(buffer, withLogicals){
+  const start = 70*4 + 40*4 + (withLogicals? 5*4 : 0);
+  const dv = new DataView(buffer, start, 24*8);
+  const arr = [];
+  for(let i=0;i<24;i++){ let s=""; for(let k=0;k<8;k++){ s += String.fromCharCode(dv.getUint8(i*8+k)); } arr.push(s.replace(/\x00/g,'').trim()); }
+  return arr;
+}
+function parseSac(buffer){
+  const dv = new DataView(buffer);
+  function readFloat(i, le){ return dv.getFloat32(i*4, le); }
+  function readInt(i, le){ const byteOffset = 70*4 + i*4; return le ? dv.getInt32(byteOffset, true) : dv.getInt32(byteOffset, false); }
+  const cand = [true,false].map(le=>{
+    const delta = readFloat(FIDX.DELTA, le);
+    const stla = readFloat(FIDX.STLA, le);
+    const stlo = readFloat(FIDX.STLO, le);
+    const evla = readFloat(FIDX.EVLA, le);
+    const evlo = readFloat(FIDX.EVLO, le);
+    const evdp = readFloat(FIDX.EVDP, le);
+    const plaus = (delta>1e-6 && delta<1e4 && Math.abs(stla)<=90 && Math.abs(stlo)<=360 && Math.abs(evla)<=90 && Math.abs(evlo)<=360);
+    return {le, delta, stla, stlo, evla, evlo, evdp, dist: readFloat(FIDX.DIST, le), az: readFloat(FIDX.AZ, le), baz: readFloat(FIDX.BAZ, le), gcarc: readFloat(FIDX.GCARC, le), plaus};
+  });
+  const pick = cand.find(c=>c.plaus) || cand[0];
+  const NPTS_INDEX = 9; let npts = readInt(NPTS_INDEX, pick.le);
+  let dataOffset = null;
+  for(const hsz of HEADER_SIZES){ const remain = dv.byteLength - hsz; if(remain >= npts*4){ dataOffset = hsz; break; } }
+  if(dataOffset===null){ const remain = dv.byteLength - 632; dataOffset = 632; npts = Math.max(0, Math.floor(remain/4)); }
+  let kstnm="", knetwk="", kcmpnm="";
+  try{
+    const charsNoLog = readCharFields(buffer, false); const charsLog = readCharFields(buffer, true);
+    const candidates = [{kst: charsNoLog[0]||"", net: charsNoLog[21]||""},{kst: charsLog[0]||"", net: charsLog[21]||""}];
+    const chosen = candidates.find(c=>c.kst && c.kst.length>0) || candidates[0];
+    kstnm = chosen.kst; knetwk = chosen.net;
+    kcmpnm = (charsNoLog[20] || charsLog[20] || "").trim();
+  }catch(_){}
+  const f32 = new Float32Array(buffer, dataOffset, npts);
+  return { littleEndian: pick.le, npts, delta: pick.delta, b: readFloat(FIDX.B, pick.le), e: readFloat(FIDX.E, pick.le),
+           evla: cleanVal(pick.evla), evlo: cleanVal(pick.evlo), evdp: cleanVal(pick.evdp),
+           stla: cleanVal(pick.stla), stlo: cleanVal(pick.stlo),
+           az: cleanVal(pick.az), baz: cleanVal(pick.baz), dist_km: cleanVal(pick.dist), gcarc: cleanVal(pick.gcarc),
+           a: cleanVal(readFloat(FIDX.A, pick.le)),
+           data: f32, kstnm, knetwk, kcmpnm };
+}
+
+/* ---------- Data model ---------- */
+const rows = []; // per-station
+let EV = {evla:null, evlo:null, evdp:null};
+let FM_SOLUTION = null; // cache last focal mech solution
+let MANUAL_MODE = false;
+let MANUAL_SOL = null; // manual-mode solution override
+let FILL_T_MATCH = false; // for beachball fill alignment
+// Manual selection state (A,B define Plane1; C + Pole1 define Plane2)
+let MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+let MANUAL_POINTS = [];
+
+function setDiag(html){ document.getElementById('diag').innerHTML = html; }
+function cyclePol(p){ return p==="?"?"+":(p==="+")?"−":"?"; }
+
+function renderTable(){
+  const tb = document.getElementById('tbody'); tb.innerHTML="";
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    function td(v){ const e=document.createElement('td'); e.textContent=v; return e; }
+    tr.appendChild(td(r.id));
+    tr.appendChild(td(fmt(r.stla,4)));
+    tr.appendChild(td(fmt(r.stlo,4)));
+    tr.appendChild(td(fmt(r.az,1)));
+    tr.appendChild(td(fmt(r.baz,1)));
+    tr.appendChild(td(fmt(r.gcarc,2)));
+    tr.appendChild(td(fmt(r.dist_km,1)));
+    tr.appendChild(td(isFinite(r.tk_plot)?fmt(r.tk_plot,1):"—"));
+    tr.appendChild(td(isFinite(r.ptime)?fmt(r.ptime,2):"—"));
+    const pol = document.createElement('td'); pol.textContent = r.pol || "?"; pol.style.cursor="pointer";
+    pol.addEventListener('click', ()=>{ r.pol = cyclePol(r.pol); pol.textContent=r.pol; drawStereo(); });
+    tr.appendChild(pol);
+    const m = document.createElement('td'); m.innerHTML = r.method==="jansky" ? '<span class="badge" style="color:var(--accent)">jansky</span>' : '<span class="badge" style="color:var(--warn)">fallback</span>'; tr.appendChild(m);
+    tb.appendChild(tr);
+  });
+  document.getElementById('sacCount').textContent = String(rows.length);
+  drawStereo();
+}
+
+function recompute(){
+  if(EV.evla==null||EV.evlo==null||EV.evdp==null){ setDiag('Set EVLA/EVLO/EVDP.'); return; }
+  let nJ=0, nF=0;
+  rows.forEach(r=>{
+    if(r.az==null || r.baz==null){
+      r.az  = azimuth(EV.evla, EV.evlo, r.stla, r.stlo);
+      r.baz = azimuth(r.stla, r.stlo, EV.evla, EV.evlo);
+    }
+    if(r.dist_km==null){
+      r.dist_km = haversineKm(EV.evla, EV.evlo, r.stla, r.stlo);
+      r.gcarc = r.dist_km/111.32;
+    }else{
+      r.gcarc = (r.gcarc!=null? r.gcarc : r.dist_km/111.32);
+    }
+    const {angle, method} = takeoffAngle(r.dist_km, EV.evdp);
+    r.tk = angle; r.method = method;
+    if(method==="jansky") nJ++; else nF++;
+    if(r.tk>90){ r.tk_plot=180-r.tk; r.az_used=(r.az+180)%360; } else { r.tk_plot=r.tk; r.az_used=r.az; }
+    const vavg = vpAtDepth(Math.max(0, EV.evdp*0.5));
+    r.ptime = r.dist_km / Math.max(0.1, vavg);
+  });
+  setDiag(`Solved ${rows.length} station(s): <span class="ok">${nJ} Jansky</span>, <span class="warn">${nF} Fallback</span>.`);
+  renderTable();
+}
+
+/* ---------- Stereonet ---------- */
+const stereo = document.getElementById('stereo');
+
+// High-DPI scaling for crisp drawing
+function setupHiDPICanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = {w: canvas.width, h: canvas.height};
+  canvas.width = Math.round(rect.w * dpr);
+  canvas.height = Math.round(rect.h * dpr);
+  canvas.style.width = rect.w + "px";
+  canvas.style.height = rect.h + "px";
+  const c = canvas.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  return c;
+}
+
+const ctx = setupHiDPICanvas(stereo);
+let view = { cx: stereo.width/2, cy: stereo.height/2, R: Math.min(stereo.width,stereo.height)*0.42, zoom:1, panX:0, panY:0 };
+let dragging=false, last={x:0,y:0};
+
+let stereoCursor = {x:null,y:null, az:null, tk:null};
+stereo.addEventListener('mousemove', (e)=>{
+  const rect = stereo.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const cx=view.cx+view.panX, cy=view.cy+view.panY;
+  const dx=x - cx, dy=y - cy;
+  const R = view.R*view.zoom;
+  if(Math.hypot(dx,dy) <= R){
+    const a = azTkFromXY(dx, dy);
+    stereoCursor = {x,y, az:a.az, tk:a.tk};
+  } else {
+    stereoCursor = {x:null,y:null, az:null, tk:null};
+  }
+  drawStereo();
+});
+stereo.addEventListener('mouseleave', ()=>{ stereoCursor={x:null,y:null, az:null, tk:null}; drawStereo(); });
+
+
+function xyFromAzTakeoff(azDeg, tkPlotDeg){
+  // Compass azimuth: 0°=North (up), 90°=East (right), clockwise
+  const az = toRad(azDeg), take = toRad(tkPlotDeg);
+  const rr = view.R*Math.SQRT2*Math.sin(take/2);
+  return { x: rr*Math.sin(az), y: -rr*Math.cos(az) };
+}
+function azTkFromXY(dx, dy){
+  // Inverse of xyFromAzTakeoff for compass convention (y positive downwards)
+  const rr = Math.hypot(dx, dy);
+  const t = 2*Math.asin( rr / (view.R*Math.SQRT2) );
+  const az = (toDeg(Math.atan2(dx, -dy)) + 360) % 360;
+  return { az, tk: toDeg(t) };
+}
+
+function jacobiEigenSym3(M, iters=50){
+  let a = [[M[0][0], M[0][1], M[0][2]],[M[1][0], M[1][1], M[1][2]],[M[2][0], M[2][1], M[2][2]]];
+  let v = [[1,0,0],[0,1,0],[0,0,1]];
+  function rotate(p,q){
+    if(Math.abs(a[p][q]) < 1e-15) return;
+    const app=a[p][p], aqq=a[q][q], apq=a[p][q];
+    const phi = 0.5*Math.atan2(2*apq, (aqq-app));
+    const c=Math.cos(phi), s=Math.sin(phi);
+    const app2 = c*c*app - 2*s*c*apq + s*s*aqq;
+    const aqq2 = s*s*app + 2*s*c*apq + c*c*aqq;
+    a[p][p]=app2; a[q][q]=aqq2; a[p][q]=a[q][p]=0;
+    for(let r=0;r<3;r++){
+      if(r!==p && r!==q){
+        const arp=a[r][p], arq=a[r][q];
+        a[r][p]=a[p][r]= c*arp - s*arq;
+        a[r][q]=a[q][r]= s*arp + c*arq;
+      }
+      const vrp=v[r][p], vrq=v[r][q];
+      v[r][p]= c*vrp - s*vrq;
+      v[r][q]= s*vrp + c*vrq;
+    }
+  }
+  for(let k=0;k<iters;k++){
+    let p=0,q=1; let max=Math.abs(a[0][1]);
+    if(Math.abs(a[0][2])>max){ p=0;q=2;max=Math.abs(a[0][2]); }
+    if(Math.abs(a[1][2])>max){ p=1;q=2;max=Math.abs(a[1][2]); }
+    if(max<1e-12) break;
+    rotate(p,q);
+  }
+  const evals=[a[0][0],a[1][1],a[2][2]];
+  const evecs=[[v[0][0],v[1][0],v[2][0]],[v[0][1],v[1][1],v[2][1]],[v[0][2],v[1][2],v[2][2]]];
+  return {evals, evecs};
+}
+
+/* --- Beachball fill --- */
+function drawBeachball(M){
+  const show = document.getElementById('showBeachball').checked;
+  if(!show || !M) return;
+  const R = view.R*view.zoom;
+  const cx = view.cx+view.panX, cy=view.cy+view.panY;
+  const step = 3;
+  ctx.save();
+  for(let y=Math.round(cy-R); y<=Math.round(cy+R); y+=step){
+    for(let x=Math.round(cx-R); x<=Math.round(cx+R); x+=step){
+      const dx=x-cx, dy=y-cy;
+      const rr = Math.hypot(dx,dy);
+      if(rr>R) continue;
+      const {az, tk} = azTkFromXY(dx, dy);
+      const th = toRad(tk);
+      const n = [ Math.sin(th)*Math.sin(toRad(az)), Math.sin(th)*Math.cos(toRad(az)), -Math.cos(th) ];
+      const Mn = [ M[0][0]*n[0] + M[0][1]*n[1] + M[0][2]*n[2],
+                   M[1][0]*n[0] + M[1][1]*n[1] + M[1][2]*n[2],
+                   M[2][0]*n[0] + M[2][1]*n[1] + M[2][2]*n[2] ];
+      const A = n[0]*Mn[0] + n[1]*Mn[1] + n[2]*Mn[2];
+      ctx.fillStyle = A > 0 ? "#90EE90" : "white";
+      ctx.fillRect(x, y, step, step);
+    }
+  }
+  ctx.restore();
+}
+
+/* --- FM math helpers --- */
+class FocalMechanismSolver{
+  constructor(picks){
+    this.picks = picks.filter(p=>p && (p.pol==='+' || p.pol==='−') && isFinite(p.az) && isFinite(p.tk));
+  }
+  static dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+  static cross(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  static norm(a){ const L=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/L,a[1]/L,a[2]/L]; }
+  static rayVecNED(azDeg, tkDeg){ const az=toRad(azDeg), th=toRad(tkDeg); const up=Math.cos(th), sn=Math.sin(th); return [ sn*Math.sin(az), sn*Math.cos(az), -up ]; }
+  // Frame used everywhere in this tool: x = East, y = North, z = Up (same as rayVecNED and the stereonet).
+  // n = up-pointing fault normal, s = slip vector of the hanging wall (n.s = 0).
+  static sdrToNS(strikeDeg, dipDeg, rakeDeg){
+    const φ = toRad(strikeDeg), δ = toRad(dipDeg), λ = toRad(rakeDeg);
+    const n = [  Math.sin(δ)*Math.cos(φ), -Math.sin(δ)*Math.sin(φ),  Math.cos(δ) ];
+    const s = [  Math.cos(λ)*Math.sin(φ) - Math.sin(λ)*Math.cos(δ)*Math.cos(φ),
+                 Math.cos(λ)*Math.cos(φ) + Math.sin(λ)*Math.cos(δ)*Math.sin(φ),
+                 Math.sin(λ)*Math.sin(δ) ];
+    return {n, s};
+  }
+  // Inverse of sdrToNS: strike/dip from the normal n, rake from the slip vector s.
+  // n and s are interchangeable (auxiliary plane = nsToSdr(s, n)); the pair (n,s) ~ (-n,-s).
+  static nsToSdr(n_in, s_in){
+    let n = this.norm(n_in), s = this.norm(s_in);
+    if(n[2] < 0){ n = [-n[0], -n[1], -n[2]]; s = [-s[0], -s[1], -s[2]]; }
+    const dip = Math.acos(Math.max(-1, Math.min(1, n[2])));
+    let t = this.cross([0,0,1], n);                       // strike direction (horizontal)
+    if(Math.hypot(t[0], t[1]) < 1e-8) t = [0,1,0];        // horizontal fault: strike undefined
+    t = this.norm([t[0], t[1], 0]);
+    const u = this.norm(this.cross(n, t));                // up-dip direction in the plane
+    let strike = Math.atan2(t[0], t[1]); if(strike < 0) strike += 2*Math.PI;   // azimuth: clockwise from North
+    const rake = Math.atan2(this.dot(s, u), this.dot(s, t));
+    return { strike: toDeg(strike), dip: toDeg(dip), rake: toDeg(rake) };
+  }
+  static sdrToMoment(strikeDeg, dipDeg, rakeDeg){
+    const {n, s} = this.sdrToNS(strikeDeg, dipDeg, rakeDeg);
+    const M = [[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++) for(let j=0;j<3;j++) M[i][j] = s[i]*n[j] + n[i]*s[j];
+    return {M, n, s};
+  }
+  static amplitude(M, nvec){
+    const Mn = [ M[0][0]*nvec[0] + M[0][1]*nvec[1] + M[0][2]*nvec[2],
+                 M[1][0]*nvec[0] + M[1][1]*nvec[1] + M[1][2]*nvec[2],
+                 M[2][0]*nvec[0] + M[2][1]*nvec[1] + M[2][2]*nvec[2] ];
+    return nvec[0]*Mn[0] + nvec[1]*Mn[1] + nvec[2]*Mn[2];
+  }
+  scoreStrikeDipRake(strike, dip, rake){
+    const {M} = FocalMechanismSolver.sdrToMoment(strike, dip, rake);
+    let correct=0, wrong=0, nodal=0, used=0, margin=0; const eps = 1e-6;
+    for(const p of this.picks){
+      const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+      const A = FocalMechanismSolver.amplitude(M, nvec);
+      if(Math.abs(A) < eps){ nodal++; continue; }
+      const sign = (A>0)? '+' : '−';
+      if(sign === p.pol) correct++; else wrong++;
+      margin += (p.pol === '+') ? A : -A;   // soft agreement: favours solutions away from the nodal planes
+      used++;
+    }
+    const score = correct - wrong;
+    return {score, correct, wrong, nodal, used, margin};
+  }
+  solve(gridStrike=10, gridDip=5, gridRake=10, doRefine=true){
+    if(this.picks.length === 0) return null;
+    let best = {score:-1e9, margin:-1e9, strike:0, dip:45, rake:0, correct:0, wrong:0, nodal:0, used:0};
+    const consider = (S,D,R)=>{ const r=this.scoreStrikeDipRake(S,D,R); if(r.score>best.score || (r.score===best.score && r.margin>best.margin)){ best={...r, strike:S, dip:D, rake:R}; } };
+    for(let S=0; S<360; S+=gridStrike){
+      for(let D=gridDip; D<=90; D+=gridDip){
+        for(let R=-180; R<180; R+=gridRake){
+          consider(S,D,R);
+        }
+      }
+    }
+    if(!doRefine) return this.finalize(best);
+    const s0=best.strike, d0=best.dip, r0=best.rake;
+    const s1=Math.max(0,s0-2*gridStrike), s2=Math.min(359.9,s0+2*gridStrike);
+    const d1=Math.max(1,d0-2*gridDip),     d2=Math.min(89, d0+2*gridDip);
+    const r1=r0-2*gridRake,                r2=r0+2*gridRake;
+    const ds=Math.max(2, Math.round(gridStrike/2));
+    const dd=Math.max(2, Math.round(gridDip/2));
+    const dr=Math.max(2, Math.round(gridRake/2));
+    for(let S=s1; S<=s2; S+=ds){ for(let D=d1; D<=d2; D+=dd){ for(let R=r1; R<=r2; R+=dr){ let SS=(S+360)%360, RR=((R+180)%360)-180; consider(SS,D,RR); } } }
+    for(let S=best.strike-4; S<=best.strike+4; S+=1){
+      for(let D=Math.max(1,best.dip-3); D<=Math.min(89,best.dip+3); D+=1){
+        for(let R=best.rake-6; R<=best.rake+6; R+=2){
+          let SS=(S+360)%360, RR=((R+180)%360)-180;
+          consider(SS,D,RR);
+        }
+      }
+    }
+    return this.finalize(best);
+  }
+  finalize(best){
+    const {n, s} = FocalMechanismSolver.sdrToNS(best.strike, best.dip, best.rake);
+    const aux = FocalMechanismSolver.nsToSdr(s, n);
+    const fitPct = best.used>0 ? (100*best.correct/best.used) : 0;
+    return { ...best, fitPct, aux };
+  }
+}
+
+/* ---------- Drawing helpers ---------- */
+function drawPlaneGreatCircle(normal, color){
+  const n = normal.slice();
+  const mag=Math.hypot(n[0],n[1],n[2])||1; n[0]/=mag; n[1]/=mag; n[2]/=mag;
+  let k=[0,0,1]; if(Math.abs(n[0]*k[0]+n[1]*k[1]+n[2]*k[2])>0.98) k=[0,1,0];
+  let u=[ n[1]*k[2]-n[2]*k[1], n[2]*k[0]-n[0]*k[2], n[0]*k[1]-n[1]*k[0] ];
+  let L=Math.hypot(u[0],u[1],u[2]); if(L<1e-9) return; u=[u[0]/L,u[1]/L,u[2]/L];
+  let w=[ n[1]*u[2]-n[2]*u[1], n[2]*u[0]-n[0]*u[2], n[0]*u[1]-n[1]*u[0] ];
+  L=Math.hypot(w[0],w[1],w[2]); if(L<1e-9) return; w=[w[0]/L,w[1]/L,w[2]/L];
+
+  ctx.strokeStyle=color; ctx.lineWidth=4; ctx.beginPath();
+  let first=true, prev=null;
+  for(let s=0; s<=360; s+=2){
+    const t = toRad(s);
+    const v=[ u[0]*Math.cos(t)+w[0]*Math.sin(t),
+              u[1]*Math.cos(t)+w[1]*Math.sin(t),
+              u[2]*Math.cos(t)+w[2]*Math.sin(t) ];
+    const az_math = toDeg(Math.atan2(v[1], v[0]));
+    const az = (90 - az_math + 360) % 360;
+    let tk  = toDeg(Math.acos(-v[2]));
+    let azp = az, tkp = tk;
+    if(tk>90){ tkp=180-tk; azp=(az+180)%360; }
+    const pt = xyFromAzTakeoff(azp, tkp);
+    const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+    if(first){ ctx.moveTo(x,y); first=false; prev=[x,y]; }
+    else{
+      const dx=x-prev[0], dy=y-prev[1];
+      if(Math.hypot(dx,dy) > view.R*0.5){ ctx.stroke(); ctx.beginPath(); ctx.moveTo(x,y); }
+      else{ ctx.lineTo(x,y); }
+      prev=[x,y];
+    }
+  }
+  ctx.stroke();
+}
+function drawAxisMarker(vec, color, label){
+  const az_math = toDeg(Math.atan2(vec[1], vec[0]));
+  const az = (90 - az_math + 360) % 360;
+  let tk  = toDeg(Math.acos(-vec[2]));
+  let azp=az, tkp=tk;
+  if(tk>90){ tkp=180-tk; azp=(az+180)%360; }
+  const pt = xyFromAzTakeoff(azp, tkp);
+  const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+  ctx.fillStyle=color; ctx.strokeStyle=color; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y,4,0,2*Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x-8,y); ctx.lineTo(x+8,y); ctx.moveTo(x,y-8); ctx.lineTo(x,y+8); ctx.stroke();
+  ctx.fillStyle="#000000"; ctx.font="12px ui-monospace, monospace"; ctx.fillText(label, x+8, y-8);
+}
+
+/* ---------- Stereonet Drawing ---------- */
+function drawStereo(){
+  ctx.clearRect(0,0,stereo.width,stereo.height);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,stereo.width,stereo.height);
+  ctx.strokeStyle="#000000"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+
+  // Add directional labels
+  ctx.fillStyle="#000000"; ctx.font="14px ui-monospace";
+  ctx.fillText("N", view.cx+view.panX, view.cy+view.panY - view.R*view.zoom - 10);
+  ctx.fillText("S", view.cx+view.panX, view.cy+view.panY + view.R*view.zoom + 20);
+  ctx.fillText("E", view.cx+view.panX + view.R*view.zoom + 10, view.cy+view.panY + 5);
+  ctx.fillText("W", view.cx+view.panX - view.R*view.zoom - 20, view.cy+view.panY + 5);
+
+  
+  // ----- Manual overlay: Draw A, B, C points and poles -----
+  if (MANUAL_MODE) {
+    // Draw Point A (Green circle with "A" label)
+    if (MANUAL_STATE.A) {
+        const {az, tk} = MANUAL_STATE.A;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#10b981"; // Green
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("A", x - 4, y + 5);
+    }
+
+    // Draw Point B (Green circle with "B" label)
+    if (MANUAL_STATE.B) {
+        const {az, tk} = MANUAL_STATE.B;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#10b981"; // Green
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("B", x - 4, y + 5);
+    }
+
+    // NP1 from A & B: draw great circle through A and B and mark its pole
+    if (MANUAL_STATE.A && MANUAL_STATE.B) {
+        const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+        const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+        let n1 = FocalMechanismSolver.cross(vA, vB);
+        const L = Math.hypot(n1[0], n1[1], n1[2]);
+        if (L > 1e-9) {
+            n1 = [n1[0]/L, n1[1]/L, n1[2]/L];
+            drawPlaneGreatCircle(n1, "black");
+            drawAxisMarker(n1, '#f59e0b', 'Pole1');
+        }
+    }
+
+    // Draw Point C (Cyan circle with "C" label)
+    if (MANUAL_STATE.C) {
+        const {az, tk} = MANUAL_STATE.C;
+        const pt = xyFromAzTakeoff(az, tk);
+        const x = view.cx + view.panX + pt.x * view.zoom;
+        const y = view.cy + view.panY + pt.y * view.zoom;
+
+        ctx.fillStyle = "#06b6d4"; // Cyan
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 14px ui-monospace, monospace";
+        ctx.fillText("C", x - 4, y + 5);
+    }
+
+    // NP2 from Pole1 and C: draw great circle through Pole1 and C and mark its pole
+    if (MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C) {
+        const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+        const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+        let n1 = FocalMechanismSolver.cross(vA, vB);
+        let L1 = Math.hypot(n1[0], n1[1], n1[2]);
+        if (L1 > 1e-9) {
+            n1 = [n1[0]/L1, n1[1]/L1, n1[2]/L1];
+            const vC = FocalMechanismSolver.rayVecNED(MANUAL_STATE.C.az, MANUAL_STATE.C.tk);
+            let n2 = FocalMechanismSolver.cross(n1, vC);
+            const L2 = Math.hypot(n2[0], n2[1], n2[2]);
+            if (L2 > 1e-9) {
+                n2 = [n2[0]/L2, n2[1]/L2, n2[2]/L2];
+                // enforce orthogonality numerically
+                const dot12 = n1[0]*n2[0] + n1[1]*n2[1] + n1[2]*n2[2];
+                n2 = [n2[0]-dot12*n1[0], n2[1]-dot12*n1[1], n2[2]-dot12*n1[2]];
+                const L2b = Math.hypot(n2[0], n2[1], n2[2]);
+                if (L2b > 1e-9) n2 = [n2[0]/L2b, n2[1]/L2b, n2[2]/L2b];
+
+                        drawPlaneGreatCircle(n2, "black");
+                drawAxisMarker(n2, '#f59e0b', 'Pole2');
+            }
+        }
+    }
+}
+
+  // Cursor crosshair & readout
+  if(stereoCursor.x!=null){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(stereoCursor.x-12, stereoCursor.y); ctx.lineTo(stereoCursor.x+12, stereoCursor.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(stereoCursor.x, stereoCursor.y-12); ctx.lineTo(stereoCursor.x, stereoCursor.y+12); ctx.stroke();
+    ctx.setLineDash([]);
+    const lab = `az=${stereoCursor.az.toFixed(2)}°, tk=${stereoCursor.tk.toFixed(2)}°`;
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.fillRect(stereoCursor.x+10, stereoCursor.y-20, ctx.measureText(lab).width+10, 16);
+    ctx.fillStyle='#000'; ctx.fillText(lab, stereoCursor.x+15, stereoCursor.y-8);
+    ctx.restore();
+  }
+
+  // --- Manual-mode: derive SDR from picked poles (n1, n2) by scoring 4 assignments ---
+  MANUAL_SOL = null;
+  const __manualReady = (typeof MANUAL_MODE!=='undefined') && MANUAL_MODE && MANUAL_STATE && MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C;
+  let __gc = null;
+  if(__manualReady){
+    // Use Fortran method to compute strike and dip from A and B
+    const di = [toRad(MANUAL_STATE.A.tk), toRad(MANUAL_STATE.B.tk)];
+    const azm = [toRad(MANUAL_STATE.A.az), toRad(MANUAL_STATE.B.az)];
+    const {strike, dip} = strkdip(di, azm);
+    
+    // Calculate pole of first plane (for second plane) - following Fortran code
+    const poleAz = strike + 270;   // lower-hemisphere pole of plane 1 (opposite the dip direction)
+    const poleTk = dip;
+    
+    // Use pole of first plane and point C to define second plane
+    const di2 = [toRad(poleTk), toRad(MANUAL_STATE.C.tk)];
+    const azm2 = [toRad(poleAz), toRad(MANUAL_STATE.C.az)];
+    const {strike: strike2, dip: dip2} = strkdip(di2, azm2);
+    
+    // Rake from geometry: the slip vector on plane 1 lies along the normal of plane 2.
+    // Its sign (+n2 / -n2: two different mechanisms) is decided by the polarity fit.
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    const solver = new FocalMechanismSolver(picks);
+    const n1 = FocalMechanismSolver.sdrToNS(strike, dip, 0).n;
+    const n2 = FocalMechanismSolver.sdrToNS(strike2, dip2, 0).n;
+    const proj = FocalMechanismSolver.dot(n2, n1);
+    let slip = [n2[0]-proj*n1[0], n2[1]-proj*n1[1], n2[2]-proj*n1[2]];   // make exactly perpendicular to n1
+    if(Math.hypot(slip[0], slip[1], slip[2]) < 1e-6) slip = FocalMechanismSolver.sdrToNS(strike, dip, 0).s;   // planes coincide
+    slip = FocalMechanismSolver.norm(slip);
+    const cands = [slip, [-slip[0], -slip[1], -slip[2]]].map(sv=>{
+      const sdr = FocalMechanismSolver.nsToSdr(n1, sv);
+      return {sv, sdr, m: solver.scoreStrikeDipRake(sdr.strike, sdr.dip, sdr.rake)};
+    });
+    const bestC = (cands[1].m.score > cands[0].m.score || (cands[1].m.score === cands[0].m.score && cands[1].m.margin > cands[0].m.margin)) ? cands[1] : cands[0];
+    const bestMetrics = bestC.m;
+    const finalNP1 = bestC.sdr;
+    const finalNP2 = FocalMechanismSolver.nsToSdr(bestC.sv, n1);
+
+    // Set final solution
+    MANUAL_SOL = {
+      strike: finalNP1.strike,
+      dip: finalNP1.dip,
+      rake: finalNP1.rake,
+      aux: { strike: finalNP2.strike, dip: finalNP2.dip, rake: finalNP2.rake },
+      ...bestMetrics,
+      fitPct: bestMetrics.used ? (100 * bestMetrics.correct / bestMetrics.used) : 0
+    };
+    FM_SOLUTION = MANUAL_SOL;   // keep exports / later redraws in sync with the manual solution
+
+    // Update display with correct rake values
+    document.getElementById('np1').innerText = `Strike=${MANUAL_SOL.strike.toFixed(1)}°, Dip=${MANUAL_SOL.dip.toFixed(1)}°, Rake=${MANUAL_SOL.rake.toFixed(1)}°`;
+    document.getElementById('np2').innerText = `Strike=${MANUAL_SOL.aux.strike.toFixed(1)}°, Dip=${MANUAL_SOL.aux.dip.toFixed(1)}°, Rake=${MANUAL_SOL.aux.rake.toFixed(1)}°`;
+    document.getElementById('fmscore').innerText = `Fit: ${MANUAL_SOL.fitPct.toFixed(1)}% (wrong=${MANUAL_SOL.wrong}, nodal=${MANUAL_SOL.nodal})`;
+  }
+
+if(MANUAL_MODE && MANUAL_STATE.A && MANUAL_STATE.B && MANUAL_STATE.C){
+    // Build moment tensor directly from user-picked NP1/NP2
+    const vA = FocalMechanismSolver.rayVecNED(MANUAL_STATE.A.az, MANUAL_STATE.A.tk);
+    const vB = FocalMechanismSolver.rayVecNED(MANUAL_STATE.B.az, MANUAL_STATE.B.tk);
+    let n1 = FocalMechanismSolver.cross(vA, vB);
+    let L1 = Math.hypot(n1[0], n1[1], n1[2]);
+    if(L1 > 1e-9){
+      n1 = [n1[0]/L1, n1[1]/L1, n1[2]/L1];
+      const vC = FocalMechanismSolver.rayVecNED(MANUAL_STATE.C.az, MANUAL_STATE.C.tk);
+      let n2 = FocalMechanismSolver.cross(n1, vC);
+      let L2 = Math.hypot(n2[0], n2[1], n2[2]);
+      if(L2 > 1e-9){
+        n2 = [n2[0]/L2, n2[1]/L2, n2[2]/L2];
+        // orthogonalize n2 to n1
+        const dot12 = n1[0]*n2[0] + n1[1]*n2[1] + n1[2]*n2[2];
+        n2 = [n2[0]-dot12*n1[0], n2[1]-dot12*n1[1], n2[2]-dot12*n1[2]];
+        const L2b = Math.hypot(n2[0], n2[1], n2[2]);
+        if(L2b > 1e-9) n2 = [n2[0]/L2b, n2[1]/L2b, n2[2]/L2b];
+
+        // Build DC tensor directly from nodal-plane normals so nodal lines match NP1/NP2
+        // P ∝ n1 + n2, T ∝ n1 − n2; M = T T^T − P P^T
+        let P = [n1[0]+n2[0], n1[1]+n2[1], n1[2]+n2[2]];
+        let T = [n1[0]-n2[0], n1[1]-n2[1], n1[2]-n2[2]];
+        const LP = Math.hypot(P[0], P[1], P[2]);
+        const LT = Math.hypot(T[0], T[1], T[2]);
+        if(LP > 1e-9 && LT > 1e-9){
+          P = [P[0]/LP, P[1]/LP, P[2]/LP];
+          T = [T[0]/LT, T[1]/LT, T[2]/LT];
+          const M = [[0,0,0],[0,0,0],[0,0,0]];
+          for(let i=0;i<3;i++){
+            for(let j=0;j<3;j++){
+              M[i][j] = T[i]*T[j] - P[i]*P[j];
+            }
+          }
+          // Polarity-based sign adjustment for correct P/T association; shadow on T-side
+          const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+          let correct = 0, wrong = 0;
+          for(const p of picks){
+            const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+            const A = FocalMechanismSolver.amplitude(M, nvec);
+            const sign = (A > 0) ? '+' : '−';
+            if(sign === p.pol) correct++; else wrong++;
+          }
+          if(wrong > correct){
+            for(let i=0; i<3; i++) for(let j=0; j<3; j++) M[i][j] = -M[i][j];
+          }
+          let {evals, evecs} = jacobiEigenSym3(M);
+          let iMin=0, iMax=0; for(let i=1;i<3;i++){ if(evals[i]<evals[iMin]) iMin=i; if(evals[i]>evals[iMax]) iMax=i; }
+          FILL_T_MATCH = true;
+          drawBeachball(M);
+          
+          // Store P/T state for consistent rake computation
+          let P_vec = evecs[iMin];
+          let T_vec = evecs[iMax];
+          if (P_vec[2] < 0) P_vec = [-P_vec[0], -P_vec[1], -P_vec[2]];
+          if (T_vec[2] < 0) T_vec = [-T_vec[0], -T_vec[1], -T_vec[2]];
+          window.__PT_STATE__ = {P: P_vec, T: T_vec};
+          
+          if(document.getElementById('showPT').checked){
+        drawAxisMarker(P_vec, '#60a5fa', 'P');
+        drawAxisMarker(T_vec, '#ef4444', 'T');
+      }
+          // Redraw outer circle, NP1 and NP2 lines on top of beachball for visibility
+          ctx.strokeStyle="#000000"; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+          drawPlaneGreatCircle(n1, "black");
+          drawPlaneGreatCircle(n2, "black");
+        }
+      }
+    }
+} else if(MANUAL_SOL || FM_SOLUTION){
+    const {M} = FocalMechanismSolver.sdrToMoment((MANUAL_SOL||FM_SOLUTION).strike, (MANUAL_SOL||FM_SOLUTION).dip, (MANUAL_SOL||FM_SOLUTION).rake);
+    // Check moment-tensor sign against observed polarities
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    let correct = 0, wrong = 0;
+    for(const p of picks){
+      const nvec = FocalMechanismSolver.rayVecNED(p.az, p.tk);
+      const A = FocalMechanismSolver.amplitude(M, nvec);
+      const sign = (A>0)? '+' : '−';
+      if(sign === p.pol) correct++; else wrong++;
+    }
+    if(wrong > correct){
+      // Flip moment tensor sign
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) M[i][j] = -M[i][j];
+    }
+    FILL_T_MATCH = true;
+    drawBeachball(M);
+    if(!MANUAL_MODE){
+      const ns = FocalMechanismSolver.sdrToNS((MANUAL_SOL||FM_SOLUTION).strike, (MANUAL_SOL||FM_SOLUTION).dip, (MANUAL_SOL||FM_SOLUTION).rake);
+      // Redraw outer circle on top of beachball for visibility
+      ctx.strokeStyle="#000000"; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(view.cx+view.panX, view.cy+view.panY, view.R*view.zoom, 0, 2*Math.PI); ctx.stroke();
+      drawPlaneGreatCircle(ns.n, "black");
+      drawPlaneGreatCircle(ns.s, "black");
+      const {evals, evecs} = jacobiEigenSym3(M);
+      let iMin=0,iMax=0; for(let i=1;i<3;i++){ if(evals[i]<evals[iMin]) iMin=i; if(evals[i]>evals[iMax]) iMax=i; }
+      let P_vec = evecs[iMin];
+      if (P_vec[2] < 0) P_vec = [-P_vec[0], -P_vec[1], -P_vec[2]];
+      let T_vec = evecs[iMax];
+      if (T_vec[2] < 0) T_vec = [-T_vec[0], -T_vec[1], -T_vec[2]];
+      
+      // Store P/T state for consistent rake computation
+      window.__PT_STATE__ = {P: P_vec, T: T_vec};
+      
+      if(document.getElementById('showPT').checked){ 
+        drawAxisMarker(P_vec, '#ef4444', '★ P'); 
+        drawAxisMarker(T_vec, '#60a5fa', '☆ T'); 
+      }
+    }
+  }
+
+  // stations with custom polarity symbols
+  rows.forEach(r=>{
+    if(!isFinite(r.tk_plot)||!isFinite(r.az_used)) return;
+    const pt = xyFromAzTakeoff(r.az_used, r.tk_plot);
+    const x=view.cx+view.panX+pt.x*view.zoom, y=view.cy+view.panY+pt.y*view.zoom;
+    const radius = 6;
+    if(r.pol==='+'){
+      ctx.beginPath(); ctx.fillStyle="#ef4444"; ctx.arc(x,y,radius,0,2*Math.PI); ctx.fill();
+    }else if(r.pol==='−'){
+      ctx.beginPath(); ctx.strokeStyle="#60a5fa"; ctx.lineWidth=2; ctx.arc(x,y,radius,0,2*Math.PI); ctx.stroke();
+    }else{
+      ctx.beginPath(); ctx.fillStyle="#94a3b8"; ctx.arc(x,y,3,0,2*Math.PI); ctx.fill();
+    }
+  });
+
+  // manual picks overlay (if any)
+  if(MANUAL_POINTS.length>0){
+    const colors = ['#34d399','#a78bfa'];
+    MANUAL_POINTS.forEach((vec, idx)=> drawAxisMarker(vec, colors[idx%2], idx===0?'n':'s'));
+  }
+}
+
+/* ---------- Mouse interactions ---------- */
+stereo.addEventListener('wheel', (e)=>{ e.preventDefault(); const s=Math.exp(-e.deltaY*0.001); view.zoom=Math.min(12,Math.max(0.2,view.zoom*s)); drawStereo(); }, {passive:false});
+stereo.addEventListener('mousedown', (e)=>{ 
+  // Allow dragging only when NOT in MANUAL_MODE
+  if(!MANUAL_MODE) {
+    dragging=true; 
+    last={x:e.offsetX,y:e.offsetY}; 
+  }
+});
+stereo.addEventListener('mouseup', ()=> dragging=false);
+stereo.addEventListener('mouseleave', ()=> dragging=false);
+stereo.addEventListener('mousemove', (e)=>{ 
+  if(!dragging) return; 
+  const dx=e.offsetX-last.x, dy=e.offsetY-last.y; 
+  view.panX+=dx; view.panY+=dy; 
+  last={x:e.offsetX,y:e.offsetY}; 
+  drawStereo(); 
+});
+
+
+/* ---------- Fortran-inspired spherical geometry functions ---------- */
+function strkdip(di, azm) {
+  // di, azm: arrays of 2 angles in radians
+  const pi = Math.PI;
+  const bid1 = pi - di[0];
+  const bid2 = pi - di[1];
+  const fai = azm[1] - azm[0];
+  
+  const cosi1 = Math.cos(bid1);
+  const cosi2 = Math.cos(bid2);
+  const sini1 = Math.sin(bid1);
+  const sini2 = Math.sin(bid2);
+  const cosfi = Math.cos(fai);
+  const sinfi = Math.sin(fai);
+  
+  const cosd = cosi1 * cosi2 + sini1 * sini2 * cosfi;
+  const d = Math.acos(cosd);
+  const sinb = sinfi * sini1 / Math.sin(d);
+  const temp = cosi1 - cosi2 * cosd;
+  const cosb = temp / (sini2 * Math.sin(d));
+  const b = Math.atan2(sinb, cosb);
+  
+  const cosdip = sini2 * sinb;
+  let dip = Math.acos(cosdip);
+  const sinstr = cosb / Math.sin(dip);
+  const cosstr = -cosi2 / (sini2 * Math.tan(dip));
+  let str = Math.atan2(sinstr, cosstr);
+  let strike = azm[1] + str - pi/2;
+  
+  if (dip > pi/2.0) {
+    dip = pi - dip;
+    strike += pi;
+  }
+  if (strike <= 0.0) strike += 2.0 * pi;
+  if (strike >= 2.0 * pi) strike -= 2.0 * pi;
+  
+  return { strike: toDeg(strike), dip: toDeg(dip) };
+}
+
+/* ---------- Modified manual mode following Fortran code ---------- */
+stereo.addEventListener('click', (e)=>{
+  if(!MANUAL_MODE) return;
+  const cx=view.cx+view.panX, cy=view.cy+view.panY;
+  const rect = stereo.getBoundingClientRect();
+  const x = (e.clientX - rect.left);
+  const y = (e.clientY - rect.top);
+  const dx = x - cx;
+  const dy = y - cy;
+  const R = view.R*view.zoom;
+  if(Math.hypot(dx,dy) > R) return;
+
+  // Map click -> (az, takeoff) 
+  const {az, tk} = azTkFromXY(dx, dy);
+
+  if(!MANUAL_STATE.A){
+    MANUAL_STATE = {A:{az, tk}, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+    document.getElementById('manualHint').textContent = "Point A chosen. Click B on the same plane.";
+  }else if(!MANUAL_STATE.B){
+    MANUAL_STATE.B = {az, tk};
+    
+    // Use Fortran method to compute strike and dip from A and B
+    const di = [toRad(MANUAL_STATE.A.tk), toRad(MANUAL_STATE.B.tk)];
+    const azm = [toRad(MANUAL_STATE.A.az), toRad(MANUAL_STATE.B.az)];
+    const {strike, dip} = strkdip(di, azm);
+    
+    // Store first plane solution
+    MANUAL_STATE.strike1 = strike;
+    MANUAL_STATE.dip1 = dip;
+    
+    // Calculate pole of first plane (for second plane) - following Fortran code
+    const poleAz = strike + 270;   // lower-hemisphere pole of plane 1 (opposite the dip direction)
+    const poleTk = dip;
+    
+    MANUAL_STATE.poleAz = poleAz;
+    MANUAL_STATE.poleTk = poleTk;
+    
+    document.getElementById('manualHint').textContent = `Plane 1: Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°. Pole marked. Click C for second plane.`;
+    document.getElementById('np1').innerText = `Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°`;
+  }else if(!MANUAL_STATE.C){
+    MANUAL_STATE.C = {az, tk};
+    
+    // Use pole of first plane and point C to define second plane
+    const di = [toRad(MANUAL_STATE.poleTk), toRad(MANUAL_STATE.C.tk)];
+    const azm = [toRad(MANUAL_STATE.poleAz), toRad(MANUAL_STATE.C.az)];
+    const {strike: strike2, dip: dip2} = strkdip(di, azm);
+
+    MANUAL_STATE.strike2 = strike2;
+    MANUAL_STATE.dip2 = dip2;
+
+    // Compute initial metrics for display (rake will be updated from P/T axes)
+    const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+    const solver = new FocalMechanismSolver(picks);
+    const dummyRake = 0; // placeholder, will be overridden
+    const bestMetrics = solver.scoreStrikeDipRake(MANUAL_STATE.strike1, MANUAL_STATE.dip1, dummyRake);
+
+    // Set initial solution (rake to be updated from P/T)
+    FM_SOLUTION = {
+      strike: MANUAL_STATE.strike1,
+      dip: MANUAL_STATE.dip1,
+      rake: 0, // placeholder
+      aux: { strike: strike2, dip: dip2, rake: 0 }, // placeholder
+      ...bestMetrics,
+      fitPct: bestMetrics.used ? (100 * bestMetrics.correct / bestMetrics.used) : 0
+    };
+    
+    document.getElementById('np1').innerText = `Strike=${FM_SOLUTION.strike.toFixed(1)}°, Dip=${FM_SOLUTION.dip.toFixed(1)}°, Rake=${FM_SOLUTION.rake.toFixed(1)}°`;
+    document.getElementById('np2').innerText = `Strike=${FM_SOLUTION.aux.strike.toFixed(1)}°, Dip=${FM_SOLUTION.aux.dip.toFixed(1)}°, Rake=${FM_SOLUTION.aux.rake.toFixed(1)}°`;
+    document.getElementById('fmscore').innerText = `Fit: ${FM_SOLUTION.fitPct.toFixed(1)}% (wrong=${FM_SOLUTION.wrong}, nodal=${FM_SOLUTION.nodal})`;
+    document.getElementById('manualHint').textContent = "Manual solution complete. Click Reset to change.";
+  }
+  drawStereo();
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(!MANUAL_MODE) return;
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+  
+  // Determine which point to nudge
+  let pointToMove = null;
+  if(MANUAL_STATE.C) pointToMove = 'C';
+  else if(MANUAL_STATE.B) pointToMove = 'B';
+  else if(MANUAL_STATE.A) pointToMove = 'A';
+  if(!pointToMove) return;
+  
+  const step = e.shiftKey ? 0.05 : 0.25;
+  let az, tk;
+  
+  switch(pointToMove) {
+    case 'A': az = MANUAL_STATE.A.az; tk = MANUAL_STATE.A.tk; break;
+    case 'B': az = MANUAL_STATE.B.az; tk = MANUAL_STATE.B.tk; break;
+    case 'C': az = MANUAL_STATE.C.az; tk = MANUAL_STATE.C.tk; break;
+  }
+  
+  if(e.key==='ArrowLeft') az = (az - step + 360) % 360;
+  if(e.key==='ArrowRight') az = (az + step) % 360;
+  if(e.key==='ArrowUp') tk = Math.max(0, tk - step);
+  if(e.key==='ArrowDown') tk = Math.min(180, tk + step);
+  
+  // Update the point
+  switch(pointToMove) {
+    case 'A': 
+      MANUAL_STATE.A.az = az; 
+      MANUAL_STATE.A.tk = tk;
+      break;
+    case 'B': 
+      MANUAL_STATE.B.az = az; 
+      MANUAL_STATE.B.tk = tk;
+      // Recompute first plane
+      if(MANUAL_STATE.A) {
+        const di = [toRad(MANUAL_STATE.A.tk), toRad(tk)];
+        const azm = [toRad(MANUAL_STATE.A.az), toRad(az)];
+        const {strike, dip} = strkdip(di, azm);
+        MANUAL_STATE.strike1 = strike;
+        MANUAL_STATE.dip1 = dip;
+        
+        // Update pole
+        MANUAL_STATE.poleAz = strike + 270;
+        MANUAL_STATE.poleTk = dip;
+        
+        document.getElementById('np1').innerText = `Strike=${strike.toFixed(1)}°, Dip=${dip.toFixed(1)}°`;
+      }
+      break;
+    case 'C': 
+      MANUAL_STATE.C.az = az; 
+      MANUAL_STATE.C.tk = tk;
+        // Recompute second plane if first plane is defined
+      if(MANUAL_STATE.strike1 !== undefined) {
+        const di = [toRad(MANUAL_STATE.poleTk), toRad(tk)];
+        const azm = [toRad(MANUAL_STATE.poleAz), toRad(az)];
+        const {strike: strike2, dip: dip2} = strkdip(di, azm);
+
+        MANUAL_STATE.strike2 = strike2;
+        MANUAL_STATE.dip2 = dip2;
+
+        // Update FM_SOLUTION strike/dip (rake will be updated from P/T)
+        if (FM_SOLUTION) {
+          FM_SOLUTION.aux.strike = strike2;
+          FM_SOLUTION.aux.dip = dip2;
+        }
+      }
+      break;
+  }
+  
+  drawStereo();
+  e.preventDefault();
+});
+
+document.getElementById('btnManual').addEventListener('click', ()=>{
+  MANUAL_MODE = !MANUAL_MODE;
+  MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+  document.getElementById('manualHint').textContent = MANUAL_MODE ? "Manual mode ON. Click A, then B on first plane, then C for second plane." : "";
+  document.getElementById('btnManual').classList.toggle('secondary', MANUAL_MODE);
+  drawStereo();
+});
+
+document.getElementById('btnResetFM').addEventListener('click', ()=>{
+  FM_SOLUTION = null;
+  MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null};
+  MANUAL_MODE = false;
+  document.getElementById('np1').innerText = '—';
+  document.getElementById('np2').innerText = '—';
+  document.getElementById('fmscore').innerText = '—';
+  document.getElementById('manualHint').textContent = "";
+  drawStereo();
+});
+
+document.getElementById('btnExportPNG').addEventListener('click', ()=>{
+  const url = stereo.toDataURL('image/png');
+  const a = document.createElement('a'); a.href=url; a.download='stereonet.png'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); }, 0);
+});
+
+/* ---------- Picker ---------- */
+const modal = document.getElementById('modal');
+const pickList = document.getElementById('pickList');
+const pickCanvas = document.getElementById('pickCanvas');
+const pctx = pickCanvas.getContext('2d');   // sized to its container by resizePickCanvas()
+let pickIndex = 0;
+let viewX = {t0:0, t1:10};
+let setPMode = true;   // click on the waveform sets P (toggle with the Set P button or the P key)
+const PK = {W:820, H:500, x0:16, x1:804, y0:40, y1:450, pre:1, post:2, mode:'p', gain:1, scale:'onset',
+            hover:null, rubber:null, rubberOnce:false, drag:null, raf:false};
+
+function filteredSegment(seg, dt){
+  const doFilt = document.getElementById('doFilt').checked;
+  const hp = parseFloat(document.getElementById('hpHz').value)||0;
+  const lp = parseFloat(document.getElementById('lpHz').value)||0;
+  const doNorm = document.getElementById('doNorm').checked;
+  let y = seg;
+  if(doFilt) y = bandpass(seg, dt, hp, lp);
+  if(doNorm){
+    let m=1e-9; for(let i=0;i<y.length;i++){ const a=Math.abs(y[i]); if(a>m) m=a; }
+    const z = new Float32Array(y.length);
+    for(let i=0;i<y.length;i++) z[i]= y[i]/m;
+    return z;
+  }
+  return y;
+}
+
+function suggestPolarity(r, tP){
+  if(!r || !r.data) return '?';
+  const dt=r.delta||0.01, b=r.b||0;
+  const n=r.data.length;
+  const iP = Math.max(1, Math.min(n-2, Math.round((tP - b)/dt)));
+  const kB = Math.max(1, Math.floor(0.02/dt));
+  const kA = Math.max(1, Math.floor(0.02/dt));
+  const i0 = Math.max(0, iP - kB);
+  const i1 = Math.min(n-1, iP + kA);
+  const segOrig = r.data.subarray(i0, i1+1);
+  const seg = filteredSegment(segOrig, dt);
+  let mB=0, mA=0, nb=0, na=0;
+  for(let i=0;i<seg.length;i++){
+    if(i+i0 < iP){ mB+=seg[i]; nb++; } else { mA+=seg[i]; na++; }
+  }
+  mB/=Math.max(1,nb); mA/=Math.max(1,na);
+  let rms=0; for(let i=0;i<seg.length;i++) rms+=seg[i]*seg[i];
+  rms = Math.sqrt(rms/Math.max(1, seg.length));
+  const delta = mA - mB;
+  const thr = 0.2*rms;
+  if(delta>thr) return '+';
+  if(delta<-thr) return '−';
+  return '?';
+}
+
+// Simple STA/LTA-based first-arrival detector to estimate P time
+function detectPTime(r){
+  if(!r || !r.data) return null;
+  const dt = r.delta || 0.01, b = r.b || 0;
+  const x = r.data;
+  // de-mean
+  let mean = 0; for(let i=0;i<x.length;i++) mean += x[i]; mean /= Math.max(1, x.length);
+  const dm = new Float32Array(x.length); for(let i=0;i<x.length;i++) dm[i] = x[i] - mean;
+  const y = filteredSegment(dm, dt); // obeys current filter settings
+  const N = y.length; if(N < 50) return null;
+  const staSec = 0.3, ltaSec = 5.0, thr = 3.0;
+  const nSTA = Math.max(1, Math.floor(staSec/dt));
+  const nLTA = Math.max(nSTA + 1, Math.floor(ltaSec/dt));
+  if(N <= nLTA) return null;
+  // cumulative sum of absolute values for O(1) window sums
+  const csum = new Float32Array(N+1); csum[0]=0;
+  for(let i=0;i<N;i++) csum[i+1] = csum[i] + Math.abs(y[i]);
+  for(let i=nLTA; i<N; i++){
+    const sumL = csum[i] - csum[i-nLTA];
+    const sumS = csum[i] - csum[i-nSTA];
+    const ltaAvg = sumL / nLTA;
+    const staAvg = sumS / nSTA;
+    const ratio = ltaAvg > 1e-9 ? (staAvg / ltaAvg) : 0;
+    if(ratio > thr){
+      return b + i*dt;
+    }
+  }
+  return null;
+}
+
+function autoPickPolarityAll(){
+  let picked = 0, marked = 0;
+  for(const r of rows){
+    if(!r || !r.data) continue;
+    let t = r.pmark;
+    if(t == null) { t = detectPTime(r); if(t!=null) marked++; }
+    if(t == null) continue;
+    r.pmark = t;
+    r.psuggest = suggestPolarity(r, t);
+    if(r.psuggest && r.psuggest !== '?'){ r.pol = r.psuggest; picked++; }
+  }
+  // Update UI
+  renderTable();
+  if(rows[pickIndex]){ drawPick(); updatePMeta(); }
+  const st = document.getElementById('pickStatus');
+  if(st) st.textContent = `Auto picked ${picked} polarity(ies); set P-time for ${marked} trace(s).`;
+}
+
+function pkNiceStep(span, target){
+  const raw = span / Math.max(1, target);
+  if(!isFinite(raw) || raw <= 0) return {step:1, f:1};
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const m = raw / p;
+  const f = m < 1.5 ? 1 : (m < 3.5 ? 2 : (m < 7.5 ? 5 : 10));
+  return {step: f*p, f};
+}
+
+function pkBounds(r){
+  const n = r.data.length, dt = r.delta || 0.01, b = r.b || 0;
+  return {n, dt, b, tmax: b + (n-1)*dt};
+}
+
+// Time used to centre the view: the P mark, else an automatic STA/LTA estimate (cached, not stored as a pick).
+function pkCenterTime(r){
+  if(r.pmark != null) return r.pmark;
+  if(r.pguess === undefined) r.pguess = detectPTime(r);
+  return r.pguess;
+}
+
+function pkSyncSelect(){
+  const sel = document.getElementById('pkWin'); if(!sel) return;
+  const v = PK.mode === 'p' ? (PK.pre + ',' + PK.post) : (PK.mode === 'full' ? 'full' : 'custom');
+  sel.value = v;
+  if(sel.value !== v) sel.value = 'custom';
+}
+
+// Preset window (pre/post seconds) around the P mark of a trace.
+function pkWindowAroundP(r){
+  const bd = pkBounds(r), c = pkCenterTime(r);
+  if(c == null){ viewX.t0 = bd.b; viewX.t1 = Math.min(bd.tmax, bd.b + 20); PK.mode = 'custom'; pkSyncSelect(); return false; }
+  viewX.t0 = Math.max(bd.b, c - PK.pre);
+  viewX.t1 = Math.min(bd.tmax, c + PK.post);
+  if(viewX.t1 - viewX.t0 < bd.dt * 12){ viewX.t0 = bd.b; viewX.t1 = Math.min(bd.tmax, bd.b + 20); }
+  PK.mode = 'p'; pkSyncSelect();
+  return true;
+}
+
+// Band-passed samples [need0, needEnd] with a lead-in so the causal filter's start-up transient stays off screen.
+function pkFiltered(r, need0, needEnd){
+  const dt = r.delta || 0.01;
+  const doFilt = document.getElementById('doFilt').checked;
+  const hp = parseFloat(document.getElementById('hpHz').value) || 0;
+  const lp = parseFloat(document.getElementById('lpHz').value) || 0;
+  const lead = Math.min(need0, Math.round(Math.max(3, hp > 0 ? 5/hp : 0) / dt));
+  const s = need0 - lead;
+  const seg = r.data.subarray(s, needEnd + 1);
+  let mean = 0; for(let i=0;i<seg.length;i++) mean += seg[i]; mean /= Math.max(1, seg.length);
+  const dm = new Float32Array(seg.length); for(let i=0;i<seg.length;i++) dm[i] = seg[i] - mean;
+  const y = doFilt ? bandpass(dm, dt, hp, lp) : dm;
+  return {y: y, off: s};
+}
+
+function drawPick(){
+  const W = PK.W, H = PK.H;
+  PK.x0 = 16; PK.x1 = W - 16; PK.y0 = 40; PK.y1 = H - 50;
+  const {x0, x1, y0, y1} = PK;
+  pctx.fillStyle = "#0b1220"; pctx.fillRect(0, 0, W, H);
+  const r = rows[pickIndex];
+  if(!r || !r.data || !r.data.length){ pctx.fillStyle = "#94a3b8"; pctx.font = "13px ui-monospace, monospace"; pctx.fillText("No waveform data in this SAC.", 20, 28); return; }
+  const bd = pkBounds(r), dt = bd.dt, b = bd.b, n = bd.n;
+  let t0 = Math.max(b, viewX.t0), t1 = Math.min(bd.tmax, viewX.t1);
+  if(!(t1 > t0)){ t0 = b; t1 = Math.min(bd.tmax, b + 20); }
+  viewX.t0 = t0; viewX.t1 = t1;
+  const span = t1 - t0;
+  const plotW = x1 - x0, plotH = y1 - y0;
+  const ia = Math.max(0, Math.floor((t0 - b)/dt)), ib = Math.min(n-1, Math.ceil((t1 - b)/dt));
+  const hasP = r.pmark != null;
+  const pIdx = hasP ? Math.round((r.pmark - b)/dt) : -1;
+  let need0 = ia, needEnd = ib;
+  if(hasP && pIdx >= 0 && pIdx < n){
+    need0 = Math.min(ia, Math.max(0, pIdx - Math.round(1.0/dt)));
+    needEnd = Math.max(ib, Math.min(n-1, pIdx + Math.round(0.5/dt)));
+  }
+  const F = pkFiltered(r, need0, needEnd), y = F.y, off = F.off;
+  // Baseline = mean of the 1 s before the P mark (independent of zoom); otherwise the visible mean.
+  let base = 0, cnt = 0;
+  if(hasP && pIdx - Math.round(1.0/dt) >= off && pIdx > 10){
+    for(let k = pIdx - Math.round(1.0/dt); k < pIdx; k++){ base += y[k-off]; cnt++; }
+  }else{
+    for(let k = ia; k <= ib; k++){ base += y[k-off]; cnt++; }
+  }
+  base = cnt ? base/cnt : 0;
+  let amaxWin = 1e-12;
+  for(let k = ia; k <= ib; k++){ const a = Math.abs(y[k-off] - base); if(a > amaxWin) amaxWin = a; }
+  let aRef = amaxWin;
+  if(PK.scale === 'onset' && hasP && pIdx >= 0 && pIdx < n){
+    let ao = 0;
+    for(let k = Math.max(need0, pIdx - Math.round(0.3/dt)); k <= Math.min(needEnd, pIdx + Math.round(0.5/dt)); k++){ const a = Math.abs(y[k-off] - base); if(a > ao) ao = a; }
+    if(ao > 0) aRef = ao;
+  }
+  const yMid = (y0 + y1)/2;
+  const yScale = (plotH/2) * 0.92 * PK.gain / aRef;
+
+  // Time axis, relative to the P mark when there is one
+  const tRef = hasP ? r.pmark : 0;
+  const ns = pkNiceStep(span, Math.max(3, Math.floor(plotW/95)));
+  const step = ns.step, minor = ns.f === 2 ? step/2 : step/5;
+  const dec = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+  pctx.save(); pctx.beginPath(); pctx.rect(x0, y0, plotW, plotH); pctx.clip();
+  pctx.lineWidth = 1;
+  pctx.strokeStyle = "#131d33";
+  for(let g = Math.ceil((t0 - tRef)/minor - 1e-9)*minor, c = 0; g + tRef <= t1 + 1e-9 && c < 2000; g += minor, c++){
+    const gx = Math.round(x0 + (g + tRef - t0)/span*plotW) + 0.5;
+    pctx.beginPath(); pctx.moveTo(gx, y0); pctx.lineTo(gx, y1); pctx.stroke();
+  }
+  pctx.strokeStyle = "#22304d";
+  for(let g = Math.ceil((t0 - tRef)/step - 1e-9)*step, c = 0; g + tRef <= t1 + 1e-9 && c < 500; g += step, c++){
+    const gx = Math.round(x0 + (g + tRef - t0)/span*plotW) + 0.5;
+    pctx.beginPath(); pctx.moveTo(gx, y0); pctx.lineTo(gx, y1); pctx.stroke();
+  }
+  pctx.restore();
+  pctx.strokeStyle = "#2b3b5c"; pctx.lineWidth = 1; pctx.strokeRect(x0 + 0.5, y0 + 0.5, plotW, plotH);
+  pctx.strokeStyle = "#33466b"; pctx.beginPath(); pctx.moveTo(x0, Math.round(yMid) + 0.5); pctx.lineTo(x1, Math.round(yMid) + 0.5); pctx.stroke();
+
+  // Trace: continuous line (per-pixel min/max envelope when zoomed far out so peaks are never aliased away)
+  pctx.save(); pctx.beginPath(); pctx.rect(x0, y0, plotW, plotH); pctx.clip();
+  pctx.strokeStyle = "#22d3ee"; pctx.lineWidth = 1.7; pctx.lineJoin = "round";
+  pctx.beginPath();
+  const spp = (ib - ia + 1) / Math.max(1, plotW);
+  if(spp > 2){
+    const colMin = {}, colMax = {}, cols = [];
+    for(let k = ia; k <= ib; k++){
+      const xk = Math.floor(x0 + (b + k*dt - t0)/span*plotW);
+      const v = y[k-off] - base;
+      if(colMin[xk] === undefined){ colMin[xk] = v; colMax[xk] = v; cols.push(xk); }
+      else { if(v < colMin[xk]) colMin[xk] = v; if(v > colMax[xk]) colMax[xk] = v; }
+    }
+    for(const xk of cols){ pctx.moveTo(xk + 0.5, yMid - colMax[xk]*yScale); pctx.lineTo(xk + 0.5, yMid - colMin[xk]*yScale - 0.01); }
+  }else{
+    for(let k = ia; k <= ib; k++){
+      const x = x0 + (b + k*dt - t0)/span*plotW, yy = yMid - (y[k-off] - base)*yScale;
+      if(k === ia) pctx.moveTo(x, yy); else pctx.lineTo(x, yy);
+    }
+  }
+  pctx.stroke();
+  pctx.restore();
+
+  if(hasP && r.pmark >= t0 && r.pmark <= t1){
+    const xP = x0 + (r.pmark - t0)/span*plotW;
+    pctx.strokeStyle = "#ef4444"; pctx.lineWidth = 1.5;
+    pctx.beginPath(); pctx.moveTo(xP, y0); pctx.lineTo(xP, y1); pctx.stroke();
+  }
+
+  // Axis labels
+  pctx.fillStyle = "#94a3b8"; pctx.font = "12px ui-monospace, monospace"; pctx.textAlign = "center";
+  for(let g = Math.ceil((t0 - tRef)/step - 1e-9)*step, c = 0; g + tRef <= t1 + 1e-9 && c < 500; g += step, c++){
+    const gx = x0 + (g + tRef - t0)/span*plotW;
+    pctx.strokeStyle = "#64748b"; pctx.beginPath(); pctx.moveTo(gx, y1); pctx.lineTo(gx, y1 + 5); pctx.stroke();
+    pctx.fillText((Math.abs(g) < step*1e-6 ? 0 : g).toFixed(dec), gx, y1 + 19);
+  }
+  pctx.fillStyle = "#cbd5e1"; pctx.font = "bold 12px system-ui, sans-serif";
+  pctx.fillText(hasP ? "Time (s) relative to P mark" : "Time (s)", x0 + plotW/2, H - 8);
+
+  // Header: station, sampling, window, filter, gain; polarity at the right in colour
+  const hp = parseFloat(document.getElementById('hpHz').value) || 0, lp = parseFloat(document.getElementById('lpHz').value) || 0;
+  const filt = document.getElementById('doFilt').checked ? `BP ${hp}-${lp} Hz` : "raw";
+  pctx.textAlign = "left"; pctx.fillStyle = "#e5e7eb"; pctx.font = "bold 14px ui-monospace, monospace";
+  pctx.fillText(r.id, x0, 22);
+  pctx.fillStyle = "#94a3b8"; pctx.font = "12px ui-monospace, monospace";
+  const idW = pctx.measureText(r.id).width;
+  pctx.fillText(`   ${(1/dt).toFixed(0)} Hz  window ${span.toFixed(2)} s  ${filt}  gain x${PK.gain.toFixed(2)}  ${PK.scale === 'onset' ? 'onset scale' : 'window scale'}`, x0 + idW*1.15, 22);
+  const polTxt = r.pol === '+' ? "Polarity: +  (up)" : (r.pol === '−' ? "Polarity: −  (down)" : "Polarity: ?");
+  pctx.textAlign = "right"; pctx.font = "bold 15px system-ui, sans-serif";
+  pctx.fillStyle = r.pol === '+' ? "#f87171" : (r.pol === '−' ? "#60a5fa" : "#94a3b8");
+  pctx.fillText(polTxt, x1, 22);
+  pctx.textAlign = "left";
+
+  // Rubber band
+  if(PK.rubber){
+    const a = Math.min(PK.rubber.a, PK.rubber.b), c2 = Math.max(PK.rubber.a, PK.rubber.b);
+    pctx.fillStyle = "rgba(34,211,238,0.15)"; pctx.fillRect(a, y0, c2 - a, plotH);
+    pctx.strokeStyle = "#22d3ee"; pctx.strokeRect(a + 0.5, y0 + 0.5, c2 - a, plotH - 1);
+  }
+  // Cursor read-out
+  if(PK.hover && !PK.drag && !PK.rubber && PK.hover.x >= x0 && PK.hover.x <= x1 && PK.hover.y >= y0 && PK.hover.y <= y1){
+    const hx = PK.hover.x;
+    pctx.save(); pctx.strokeStyle = "rgba(226,232,240,0.5)"; pctx.setLineDash([2, 3]);
+    pctx.beginPath(); pctx.moveTo(hx + 0.5, y0); pctx.lineTo(hx + 0.5, y1); pctx.stroke(); pctx.restore();
+    const th = t0 + (hx - x0)/plotW*span;
+    let label = `t = ${(th - tRef >= 0 ? '+' : '')}${(th - tRef).toFixed(Math.max(2, dec + 1))} s`;
+    const kh = Math.round((th - b)/dt);
+    if(kh >= off && kh - off < y.length) label += `   A = ${(y[kh-off] - base).toPrecision(3)}`;
+    pctx.font = "12px ui-monospace, monospace";
+    const lw = pctx.measureText(label).width + 12;
+    const lx = Math.min(Math.max(hx + 10, x0 + 2), x1 - lw - 2);
+    pctx.fillStyle = "rgba(15,23,42,0.92)"; pctx.fillRect(lx, y1 - 26, lw, 20);
+    pctx.strokeStyle = "#334155"; pctx.strokeRect(lx + 0.5, y1 - 25.5, lw, 20);
+    pctx.fillStyle = "#e5e7eb"; pctx.textAlign = "left"; pctx.fillText(label, lx + 6, y1 - 11);
+  }
+}
+
+function updatePMeta(){
+  const r = rows[pickIndex]; if(!r) return;
+  document.getElementById('pTime').textContent = (r.pmark != null ? r.pmark.toFixed(3) : '–');
+  document.getElementById('pSuggest').textContent = r.psuggest || '–';
+}
+
+function pkListLabel(r, i){
+  const pol = r.pol && r.pol !== '?' ? ` [${r.pol}]` : '';
+  return `<div class="id">${r.id}${pol}</div><div class="meta">(${fmt(r.stla,3)}, ${fmt(r.stlo,3)})${r.pmark != null ? '  P ' + r.pmark.toFixed(2) + ' s' : '  no P mark'}</div>`;
+}
+function pkBuildList(){
+  pickList.innerHTML = "";
+  rows.forEach((r, i)=>{
+    const div = document.createElement('div');
+    div.className = 'item' + (i === pickIndex ? ' active' : '');
+    div.innerHTML = pkListLabel(r, i);
+    div.addEventListener('click', ()=> pkSelect(i));
+    pickList.appendChild(div);
+  });
+}
+
+function resizePickCanvas(){
+  const wrap = document.getElementById('pickWrap'); if(!wrap) return;
+  const w = Math.max(320, wrap.clientWidth), h = Math.max(240, wrap.clientHeight);
+  const dpr = window.devicePixelRatio || 1;
+  pickCanvas.width = Math.round(w*dpr); pickCanvas.height = Math.round(h*dpr);
+  pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  PK.W = w; PK.H = h;
+}
+
+function openPicker(){
+  modal.classList.add('show');
+  resizePickCanvas();
+  if(!rows.length){
+    pickList.innerHTML = '<div class="item"><div class="id">No stations loaded</div><div class="meta">Use SAC input, then try again</div></div>';
+    viewX.t0 = 0; viewX.t1 = 10;
+    drawPick();
+    return;
+  }
+  if(pickIndex >= rows.length) pickIndex = 0;
+  pkBuildList();
+  if(rows[pickIndex].data) pkWindowAroundP(rows[pickIndex]);
+  refreshPicker();
+}
+function closePicker(){ modal.classList.remove('show'); }
+function refreshPicker(){
+  const r = rows[pickIndex];
+  if(r && r.pmark != null && r.psuggest == null) r.psuggest = suggestPolarity(r, r.pmark);
+  [...pickList.children].forEach((el, idx)=>{
+    el.classList.toggle('active', idx === pickIndex);
+    if(rows[idx]) el.innerHTML = pkListLabel(rows[idx], idx);
+  });
+  const act = pickList.children[pickIndex];
+  if(act && act.scrollIntoView) act.scrollIntoView({block:'nearest'});
+  drawPick();
+  updatePMeta();
+}
+// Go to a station keeping the same view relative to its P mark.
+function pkSelect(i){
+  if(!rows.length) return;
+  const prev = rows[pickIndex];
+  const wasFrac = (prev && prev.data && pkCenterTime(prev) != null && viewX.t1 > viewX.t0) ? (pkCenterTime(prev) - viewX.t0)/(viewX.t1 - viewX.t0) : 1/3;
+  const span = viewX.t1 - viewX.t0;
+  pickIndex = (i + rows.length) % rows.length;
+  const r = rows[pickIndex];
+  if(r && r.data){
+    if(PK.mode === 'full'){ const bd = pkBounds(r); viewX.t0 = bd.b; viewX.t1 = bd.tmax; }
+    else if(PK.mode === 'p') pkWindowAroundP(r);
+    else {
+      const c = pkCenterTime(r), bd = pkBounds(r);
+      if(c != null){
+        const f = (wasFrac > 0 && wasFrac < 1) ? wasFrac : 1/3;
+        viewX.t0 = Math.max(bd.b, Math.min(c - f*span, bd.tmax - span)); viewX.t1 = Math.min(bd.tmax, viewX.t0 + span);
+      }
+    }
+  }
+  refreshPicker();
+}
+
+function pkZoomBy(factor){
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  const bd = pkBounds(r);
+  const span = viewX.t1 - viewX.t0;
+  let c = (viewX.t0 + viewX.t1)/2;
+  const pc = r.pmark;
+  if(pc != null && pc > viewX.t0 && pc < viewX.t1) c = pc;
+  const ns = Math.max(bd.dt*12, Math.min(span*factor, bd.tmax - bd.b));
+  const rel = (c - viewX.t0)/span;
+  let a = c - rel*ns;
+  a = Math.max(bd.b, Math.min(a, bd.tmax - ns));
+  viewX.t0 = a; viewX.t1 = a + ns;
+  PK.mode = 'custom'; pkSyncSelect(); drawPick();
+}
+function pkPan(frac){
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  const bd = pkBounds(r), span = viewX.t1 - viewX.t0;
+  const a = Math.max(bd.b, Math.min(viewX.t0 + frac*span, bd.tmax - span));
+  viewX.t0 = a; viewX.t1 = a + span; PK.mode = 'custom'; pkSyncSelect(); drawPick();
+}
+function pkZoomFull(){
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  const bd = pkBounds(r); viewX.t0 = bd.b; viewX.t1 = bd.tmax; PK.mode = 'full'; pkSyncSelect(); drawPick();
+}
+function pkZoomP(){
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  if(!pkWindowAroundP(r)) document.getElementById('pickStatus').textContent = 'No P mark or automatic estimate for this trace: click the waveform to set P.';
+  drawPick();
+}
+function pkApplyPreset(v){
+  if(v === 'custom') return;
+  if(v === 'full'){ pkZoomFull(); return; }
+  const p = v.split(',');
+  PK.pre = parseFloat(p[0]); PK.post = parseFloat(p[1]);
+  pkZoomP();
+}
+function pkGain(f){ PK.gain = Math.max(0.1, Math.min(50, PK.gain*f)); drawPick(); }
+function pkNudge(n){
+  const r = rows[pickIndex]; if(!r || r.pmark == null) return;
+  r.pmark += n*(r.delta || 0.01);
+  r.psuggest = suggestPolarity(r, r.pmark);
+  updatePMeta(); refreshPicker();
+  document.getElementById('pickStatus').textContent = `P mark moved to ${r.pmark.toFixed(3)} s (${n > 0 ? '+' : ''}${n} sample${Math.abs(n) === 1 ? '' : 's'}).`;
+}
+
+pickCanvas.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  if(e.shiftKey){ pkGain(e.deltaY > 0 ? 1/1.25 : 1.25); return; }          // Shift+wheel = amplitude gain
+  const bd = pkBounds(r);
+  const plotW = PK.x1 - PK.x0;
+  const cx = viewX.t0 + clamp((e.offsetX - PK.x0)/plotW, 0, 1)*(viewX.t1 - viewX.t0);
+  const scale = Math.exp(e.deltaY*(e.altKey ? 0.0006 : 0.0015));
+  const w = Math.max(bd.dt*12, Math.min((viewX.t1 - viewX.t0)*scale, bd.tmax - bd.b));
+  const rel = (cx - viewX.t0)/(viewX.t1 - viewX.t0);
+  let t0 = cx - rel*w;
+  t0 = Math.max(bd.b, Math.min(t0, bd.tmax - w));
+  viewX.t0 = t0; viewX.t1 = t0 + w;
+  PK.mode = 'custom'; pkSyncSelect();
+  drawPick();
+},{passive:false});
+pickCanvas.addEventListener('mousedown', (e)=>{
+  if(!rows[pickIndex]) return;
+  e.preventDefault();
+  if(e.shiftKey || PK.rubberOnce){ PK.rubber = {a:e.offsetX, b:e.offsetX}; return; }
+  PK.drag = {x:e.offsetX, t0:viewX.t0, t1:viewX.t1, moved:false};
+});
+pickCanvas.addEventListener('mouseup', (e)=>{
+  const r = rows[pickIndex];
+  if(PK.rubber){
+    const a = Math.min(PK.rubber.a, PK.rubber.b), c = Math.max(PK.rubber.a, PK.rubber.b);
+    PK.rubber = null; PK.rubberOnce = false;
+    if(r && r.data && c - a > 8){
+      const bd = pkBounds(r), span = viewX.t1 - viewX.t0, plotW = PK.x1 - PK.x0;
+      let tA = viewX.t0 + clamp((a - PK.x0)/plotW, 0, 1)*span, tB = viewX.t0 + clamp((c - PK.x0)/plotW, 0, 1)*span;
+      if(tB - tA < bd.dt*12){ const m = (tA + tB)/2; tA = m - bd.dt*6; tB = m + bd.dt*6; }
+      viewX.t0 = Math.max(bd.b, tA); viewX.t1 = Math.min(bd.tmax, tB);
+      PK.mode = 'custom'; pkSyncSelect();
+    }
+    drawPick(); return;
+  }
+  const d = PK.drag; PK.drag = null;
+  if(!d || d.moved || !r || !r.data || !setPMode) return;
+  if(e.offsetX < PK.x0 || e.offsetX > PK.x1 || e.offsetY < PK.y0 || e.offsetY > PK.y1) return;
+  // Click without drag = set the P mark, snapped to the nearest sample
+  const bd = pkBounds(r);
+  let t = viewX.t0 + (e.offsetX - PK.x0)/(PK.x1 - PK.x0)*(viewX.t1 - viewX.t0);
+  t = bd.b + Math.round((t - bd.b)/bd.dt)*bd.dt;
+  r.pmark = t;
+  r.psuggest = suggestPolarity(r, t);
+  document.getElementById('pickStatus').textContent = `P mark at ${t.toFixed(3)} s - suggested polarity ${r.psuggest} (Enter accepts, + / - / ? to set).`;
+  updatePMeta(); refreshPicker();
+});
+pickCanvas.addEventListener('mouseleave', ()=>{ PK.drag = null; PK.rubber = null; if(PK.hover){ PK.hover = null; drawPick(); } });
+pickCanvas.addEventListener('mousemove', (e)=>{
+  const r = rows[pickIndex]; if(!r || !r.data) return;
+  if(PK.rubber){ PK.rubber.b = e.offsetX; drawPick(); return; }
+  if(!PK.drag){
+    PK.hover = {x:e.offsetX, y:e.offsetY};
+    if(!PK.raf){ PK.raf = true; requestAnimationFrame(()=>{ PK.raf = false; if(PK.hover) drawPick(); }); }
+    return;
+  }
+  const dx = e.offsetX - PK.drag.x;
+  if(Math.abs(dx) > 3) PK.drag.moved = true;
+  if(!PK.drag.moved) return;
+  const bd = pkBounds(r), w = PK.drag.t1 - PK.drag.t0;
+  const shift = -dx/(PK.x1 - PK.x0)*w;
+  let t0 = PK.drag.t0 + shift, t1 = PK.drag.t1 + shift;
+  if(t0 < bd.b){ t1 += (bd.b - t0); t0 = bd.b; }
+  if(t1 > bd.tmax){ t0 -= (t1 - bd.tmax); t1 = bd.tmax; }
+  viewX.t0 = Math.max(bd.b, t0); viewX.t1 = Math.min(bd.tmax, t1);
+  PK.mode = 'custom'; pkSyncSelect();
+  drawPick();
+});
+function setPolarity(sym){
+  const r = rows[pickIndex]; if(!r) return;
+  r.pol = sym;
+  drawPick();
+  renderTable();
+  drawStereo();
+  const an = document.getElementById('pkAutoNext');
+  if(an && an.checked && sym !== '?') pkSelect(pickIndex + 1); else refreshPicker();
+}
+document.getElementById('btnPolPlus').addEventListener('click', ()=>setPolarity('+'));
+document.getElementById('btnPolMinus').addEventListener('click', ()=>setPolarity('−'));
+document.getElementById('btnPolUnknown').addEventListener('click', ()=>setPolarity('?'));
+document.getElementById('btnPrev').addEventListener('click', ()=> pkSelect(pickIndex - 1));
+document.getElementById('btnNext').addEventListener('click', ()=> pkSelect(pickIndex + 1));
+document.getElementById('btnClose').addEventListener('click', ()=>{ closePicker(); });
+document.getElementById('btnSetP').addEventListener('click', ()=>{ setPMode = !setPMode; document.getElementById('btnSetP').classList.toggle('primary', setPMode); });
+document.getElementById('btnAccept').addEventListener('click', ()=>{
+  const r = rows[pickIndex]; if(!r) return;
+  if(r.psuggest) { r.pol = r.psuggest; renderTable(); drawStereo(); refreshPicker(); }
+});
+document.getElementById('btnAutoPickAll').addEventListener('click', ()=>{
+  autoPickPolarityAll();
+});
+document.getElementById('pkWin').addEventListener('change', (e)=> pkApplyPreset(e.target.value));
+document.getElementById('pkScale').addEventListener('change', (e)=>{ PK.scale = e.target.value; drawPick(); });
+document.getElementById('btnZoomIn').addEventListener('click', ()=> pkZoomBy(0.5));
+document.getElementById('btnZoomOut').addEventListener('click', ()=> pkZoomBy(2));
+document.getElementById('btnZoomP').addEventListener('click', pkZoomP);
+document.getElementById('btnZoomFull').addEventListener('click', pkZoomFull);
+document.getElementById('btnAmpUp').addEventListener('click', ()=> pkGain(1.5));
+document.getElementById('btnAmpDn').addEventListener('click', ()=> pkGain(1/1.5));
+document.getElementById('btnZoomBox').addEventListener('click', ()=>{ PK.rubberOnce = true; document.getElementById('pickStatus').textContent = 'Zoom box: drag across the waveform (Shift+drag always does this).'; });
+['hpHz','lpHz','doFilt','doNorm'].forEach(id=>{ const el = document.getElementById(id); if(el) el.addEventListener('change', ()=>{ if(modal.classList.contains('show')) drawPick(); }); });
+window.addEventListener('resize', ()=>{ if(modal.classList.contains('show')){ resizePickCanvas(); drawPick(); } });
+window.addEventListener('keydown', (e)=>{
+  if(!modal.classList.contains('show')) return;
+  const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
+  if(tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  let handled = true;
+  if(k === '+' || k === '=') setPolarity('+');
+  else if(k === '-' || k === '_') setPolarity('−');
+  else if(k === '?' || k === '/') setPolarity('?');
+  else if(k === 'ArrowLeft') { if(e.shiftKey) pkPan(-0.25); else pkSelect(pickIndex - 1); }
+  else if(k === 'ArrowRight'){ if(e.shiftKey) pkPan(0.25); else pkSelect(pickIndex + 1); }
+  else if(k === 'ArrowUp') pkGain(1.5);
+  else if(k === 'ArrowDown') pkGain(1/1.5);
+  else if(k === 'i' || k === 'I') pkZoomBy(0.5);
+  else if(k === 'o' || k === 'O') pkZoomBy(2);
+  else if(k === 'z' || k === 'Z') pkZoomP();
+  else if(k === 'f' || k === 'F') pkZoomFull();
+  else if(k === ',' || k === '<') pkNudge(e.shiftKey || k === '<' ? -10 : -1);
+  else if(k === '.' || k === '>') pkNudge(e.shiftKey || k === '>' ? 10 : 1);
+  else if(k === 'p' || k === 'P'){ setPMode = !setPMode; document.getElementById('btnSetP').classList.toggle('primary', setPMode); }
+  else if(k === 'Enter'){ const r = rows[pickIndex]; if(r && r.psuggest){ r.pol = r.psuggest; renderTable(); drawStereo(); refreshPicker(); } }
+  else if(k === 'Escape'){ if(PK.rubber || PK.rubberOnce){ PK.rubber = null; PK.rubberOnce = false; drawPick(); } else closePicker(); }
+  else handled = false;
+  if(handled) e.preventDefault();
+});
+
+/* ---------- File handlers ---------- */
+document.getElementById('vmodelFile').addEventListener('change', async (e)=>{ const f=e.target.files[0]; if(!f) return; parseVModel(await f.text()); });
+document.getElementById('sacFiles').addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files||[]);
+  rows.length = 0; FM_SOLUTION = null; MANUAL_POINTS = [];
+  MANUAL_STATE = {A:null, B:null, C:null, strike1:null, dip1:null, strike2:null, dip2:null, rake1:null, rake2:null}; MANUAL_MODE=false;
+  document.getElementById('np1').innerText='—'; document.getElementById('np2').innerText='—'; document.getElementById('fmscore').innerText='—';
+  let parsed=0, evSet=false;
+  const sacMap = new Map();
+  for(const f of files){
+    try{
+      const buf = await f.arrayBuffer();
+      const sac = parseSac(buf);
+      sac._fname = f.name;
+      if(sac.evla!=null && sac.evlo!=null && sac.evdp!=null && !evSet){
+        document.getElementById('evla').value = sac.evla.toFixed(4);
+        document.getElementById('evlo').value = sac.evlo.toFixed(4);
+        document.getElementById('evdp').value = sac.evdp.toFixed(1);
+        EV = {evla:sac.evla, evlo:sac.evlo, evdp:sac.evdp};
+        evSet = true;
+      }
+      // Always add trace, even if station coordinates are missing; use filename as fallback ID
+      const comp = sac.kcmpnm || "";
+      const baseId = (sac.kstnm && sac.kstnm.length) ? `${sac.knetwk || '-'}.${sac.kstnm}` : (sac._fname || 'trace');
+      const id = comp ? `${baseId}.${comp}` : baseId;
+      if(!sacMap.has(id)) sacMap.set(id, []);
+      sacMap.get(id).push(sac);
+    }catch(err){ console.warn("SAC parse error", f.name, err); }
+  }
+  for(const [id, sacs] of sacMap){
+    if(sacs.length === 1){
+      const sac = sacs[0];
+      rows.push({ id, net: sac.knetwk, sta: sac.kstnm, stla:sac.stla, stlo:sac.stlo, az:sac.az, baz:sac.baz, gcarc:sac.gcarc,
+                  dist_km: sac.dist_km, pol:"?", method:"", data: sac.data, delta: sac.delta, b: sac.b,
+                  pmark: sac.a, psuggest: null });
+      parsed++;
+    }else{
+      // merge
+      sacs.sort((a,b)=> a.b - b.b);
+      let mergedData = new Float32Array(0);
+      let currentTime = sacs[0].b;
+      const delta = sacs[0].delta;
+      let deltaOk = true;
+      for(const sac of sacs){
+        if(Math.abs(sac.delta - delta) > 1e-6){ deltaOk = false; break; }
+      }
+      if(!deltaOk){
+        console.warn("Delta mismatch for", id, "skipping merge");
+        // push separately
+        for(const sac of sacs){
+          rows.push({ id: `${id}_${sac.b}`, net: sac.knetwk, sta: sac.kstnm, stla:sac.stla, stlo:sac.stlo, az:sac.az, baz:sac.baz, gcarc:sac.gcarc,
+                      dist_km: sac.dist_km, pol:"?", method:"", data: sac.data, delta: sac.delta, b: sac.b,
+                      pmark: sac.a, psuggest: null });
+          parsed++;
+        }
+        continue;
+      }
+      for(const sac of sacs){
+        const gap = sac.b - currentTime;
+        if(gap > 0){
+          const gapSamples = Math.round(gap / delta);
+          if(gapSamples > 0){
+            const zeros = new Float32Array(gapSamples);
+            mergedData = concatFloat32(mergedData, zeros);
+            currentTime += gapSamples * delta;
+          }
+        }
+        mergedData = concatFloat32(mergedData, sac.data);
+        currentTime += sac.data.length * delta;
+      }
+      const firstSac = sacs[0];
+      rows.push({ id, net: firstSac.knetwk, sta: firstSac.kstnm, stla:firstSac.stla, stlo:firstSac.stlo, az:firstSac.az, baz:firstSac.baz, gcarc:firstSac.gcarc,
+                  dist_km: firstSac.dist_km, pol:"?", method:"", data: mergedData, delta: delta, b: firstSac.b,
+                  pmark: firstSac.a, psuggest: null });
+      parsed++;
+    }
+  }
+  setDiag(`Loaded ${parsed} SAC file(s). ${evSet? 'Event set from first file.' : 'No EV info found; enter EVLA/EVLO/EVDP.'}`);
+  renderTable();
+});
+
+/* ---------- Solve & Export ---------- */
+document.getElementById('btnCompute').addEventListener('click', ()=>{
+  const evla=parseFloat(document.getElementById('evla').value);
+  const evlo=parseFloat(document.getElementById('evlo').value);
+  const evdp=parseFloat(document.getElementById('evdp').value);
+  EV={evla,evlo,evdp}; recompute();
+});
+
+document.getElementById('btnPick').addEventListener('click', openPicker);
+
+document.getElementById('btnSolveFM').addEventListener('click', ()=>{
+  if(rows.some(r=>!isFinite(r.tk))){
+    const evla=parseFloat(document.getElementById('evla').value);
+    const evlo=parseFloat(document.getElementById('evlo').value);
+    const evdp=parseFloat(document.getElementById('evdp').value);
+    EV={evla,evlo,evdp}; recompute();
+  }
+  const picks = rows.filter(r=>r.pol==='+'||r.pol==='−').map(r=>({az:r.az, tk:r.tk, pol:r.pol}));
+  if(picks.length < 8){ alert("Need at least 8 polarity picks (+/−)."); return; }
+  const gs = clamp(parseInt(document.getElementById('gStrike').value||10),1,30);
+  const gd = clamp(parseInt(document.getElementById('gDip').value||5),1,30);
+  const gr = clamp(parseInt(document.getElementById('gRake').value||10),1,60);
+  const refine = document.getElementById('refine').checked;
+  const solver = new FocalMechanismSolver(picks);
+  const sol = solver.solve(gs, gd, gr, refine);
+  if(!sol){ alert("Solver failed (no valid picks)."); return; }
+  // The grid search already returns the best-fitting (strike, dip, rake); sol.aux is the exact auxiliary plane.
+  FM_SOLUTION = { ...sol };
+  MANUAL_POINTS=[]; MANUAL_MODE=false; document.getElementById('manualHint').textContent="";
+  document.getElementById('np1').innerText = `Strike=${FM_SOLUTION.strike.toFixed(1)}°, Dip=${FM_SOLUTION.dip.toFixed(1)}°, Rake=${FM_SOLUTION.rake.toFixed(1)}°`;
+  document.getElementById('np2').innerText = `Strike=${FM_SOLUTION.aux.strike.toFixed(1)}°, Dip=${FM_SOLUTION.aux.dip.toFixed(1)}°, Rake=${FM_SOLUTION.aux.rake.toFixed(1)}°`;
+  document.getElementById('fmscore').innerText = `Fit: ${FM_SOLUTION.correct}/${FM_SOLUTION.used} = ${FM_SOLUTION.fitPct.toFixed(1)}% (wrong=${FM_SOLUTION.wrong}, nodal=${FM_SOLUTION.nodal})`;
+  drawStereo();
+});
+
+document.getElementById('btnExportFM').addEventListener('click', ()=>{
+  if(!FM_SOLUTION){ alert("No solution yet. Use Solve or Manual Select."); return; }
+  const s = FM_SOLUTION;
+  const lines = [];
+  lines.push("# Focal mechanism solution");
+  lines.push(`# Best NP1: strike dip rake (deg): ${s.strike.toFixed(2)} ${s.dip.toFixed(2)} ${s.rake.toFixed(2)}`);
+  lines.push(`# Aux  NP2: strike dip rake (deg): ${s.aux.strike.toFixed(2)} ${s.aux.dip.toFixed(2)} ${s.aux.rake.toFixed(2)}`);
+  lines.push(`# Fit: ${s.correct}/${s.used} = ${s.fitPct.toFixed(2)}% (wrong=${s.wrong}, nodal=${s.nodal})`);
+  lines.push("");
+  lines.push("NP1_strike\tNP1_dip\tNP1_rake\tNP2_strike\tNP2_dip\tNP2_rake\tcorrect\twrong\tnodal\tused\tfit_pct");
+  lines.push(`${s.strike.toFixed(2)}\t${s.dip.toFixed(2)}\t${s.rake.toFixed(2)}\t${s.aux.strike.toFixed(2)}\t${s.aux.dip.toFixed(2)}\t${s.aux.rake.toFixed(2)}\t${s.correct}\t${s.wrong}\t${s.nodal}\t${s.used}\t${s.fitPct.toFixed(2)}`);
+  downloadFile("fm_solution.txt", lines.join("\n"));
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  if(!rows.length) return alert("No rows to export.");
+  const lines = [];
+  lines.push("NET.STA\tSTLA\tSTLO\tEVLA\tEVLO\tEVDP\tAZ\tBAZ\tGCARC\tAZ used\tDist(km)\tTK(°)\tP_time(s)\tPOL\tMethod");
+  rows.forEach(r=>{
+    lines.push([r.id,fmt(r.stla,4),fmt(r.stlo,4),fmt(EV.evla,4),fmt(EV.evlo,4),fmt(EV.evdp,1),
+                fmt(r.az,1),fmt(r.baz,1),fmt(r.gcarc,2),fmt(r.az_used,1),fmt(r.dist_km,1),
+                fmt(r.tk_plot,1),fmt(r.ptime,2), r.pol||"?", r.method].join("\t"));
+  });
+  downloadFile("ang_results.txt", lines.join("\n"));
+  const polLines = rows.map(r=>`${r.id} ${Math.round(r.az_used||0).toString().padStart(8)}${Math.round(r.tk_plot||0).toString().padStart(8)}  ${r.pol||'?'}      ${(r.dist_km||0).toFixed(2).padStart(10)}${(r.ptime||0).toFixed(2).padStart(10)}`);
+  downloadFile("mypol.dat", polLines.join("\n"));
+});
+
+document.getElementById('btnDelete').addEventListener('click', ()=>{
+  if(rows.length === 0) return;
+  rows.splice(pickIndex, 1);
+  if(rows.length === 0){
+    closePicker();
+    return;
+  }
+  if(pickIndex >= rows.length) pickIndex = rows.length - 1;
+  openPicker();
+  renderTable();
+  drawStereo();
+});
+
+/* ---------- P/T Axes Display ---------- */
+(function(){
+  function axisStrikePlunge(vec) {
+    const plunge = toDeg(Math.acos(-vec[2])); // z positive down
+    let strike = toDeg(Math.atan2(vec[1], vec[0]));
+    strike = (strike + 360) % 360;
+    return {strike, plunge};
+  }
+
+  function updatePTAxesDisplay(){
+    if (!window.__PT_STATE__) return;
+    const P = window.__PT_STATE__.P;
+    const T = window.__PT_STATE__.T;
+    
+    let pAxis = axisStrikePlunge(P);
+    let tAxis = axisStrikePlunge(T);
+
+    // Apply corrections for P-axis
+    if (pAxis.plunge > 90) {
+      pAxis.plunge = pAxis.plunge - 90;
+    }
+
+    // Apply corrections for T-axis
+    if (tAxis.plunge > 90) {
+      tAxis.plunge = tAxis.plunge - 90;
+      tAxis.strike = (tAxis.strike + 180) % 360;
+    }
+
+    document.getElementById('p-axis').innerText = `Strike=${pAxis.strike.toFixed(1)}°, Plunge=${pAxis.plunge.toFixed(1)}°`;
+    document.getElementById('t-axis').innerText = `Strike=${tAxis.strike.toFixed(1)}°, Plunge=${tAxis.plunge.toFixed(1)}°`;
+  }
+
+  // Hook into beachball drawing to update display
+  if (typeof window.drawBeachball === 'function'){
+    var originalDrawBeachball = window.drawBeachball;
+    window.drawBeachball = function(M){
+      var result = originalDrawBeachball(M);
+      try{ updatePTAxesDisplay(); }catch(e){}
+      return result;
+    };
+  }
+
+  window.updatePTAxesDisplay = updatePTAxesDisplay;
+  if (document.readyState==='loading') {
+    document.addEventListener('DOMContentLoaded', updatePTAxesDisplay);
+  } else {
+    updatePTAxesDisplay();
+  }
+})();
+</script>
+
+<script>
+/* ======================================================================
+   Uncertainty quantification + Frohlich triangle classification
+   Methods: Bayesian MCMC (polarity likelihood with polarity-error rate),
+            bootstrap resampling of stations, Monte Carlo perturbation of
+            azimuth / take-off angle / polarity.
+   Uses the frame of FocalMechanismSolver (x=East, y=North, z=Up).
+   ====================================================================== */
+(function(){
+'use strict';
+const PI = Math.PI, D2R = PI/180, R2D = 180/PI;
+const FMS = FocalMechanismSolver;
+const $ = id => document.getElementById(id);
+
+/* ---------- small math helpers ---------- */
+const wrap360 = a => ((a % 360) + 360) % 360;
+const wrap180 = a => { a = wrap360(a); return a > 180 ? a - 360 : a; };
+const dot3 = (a,b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const cross3 = (a,b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const nrm3 = v => { const L = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0]/L, v[1]/L, v[2]/L]; };
+const axAngle = (a,b) => Math.acos(Math.min(1, Math.abs(dot3(a,b)))) * R2D;      // sign-free angle between axes
+const lowerVec = v => v[2] > 0 ? [-v[0], -v[1], -v[2]] : v;
+function azPl(v){ const u = lowerVec(v); return {az: wrap360(Math.atan2(u[0], u[1])*R2D), pl: Math.asin(Math.min(1, Math.max(0, -u[2])))*R2D}; }
+function Phi(x){                                                                    // standard normal CDF (A&S 26.2.17)
+  const t = 1/(1 + 0.2316419*Math.abs(x)), d = 0.3989423*Math.exp(-x*x/2);
+  const p = d*t*(0.3193815 + t*(-0.3565638 + t*(1.781478 + t*(-1.821256 + t*1.330274))));
+  return x > 0 ? 1 - p : p;
+}
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(rng){ let u = 0, v = 0; while(u === 0) u = rng(); while(v === 0) v = rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*PI*v); }
+function pct(sorted, q){                                                            // q in [0,100], linear interpolation
+  if(!sorted.length) return NaN;
+  const p = (sorted.length - 1)*q/100, i = Math.floor(p), f = p - i;
+  return i + 1 < sorted.length ? sorted[i]*(1-f) + sorted[i+1]*f : sorted[i];
+}
+const numAsc = (a,b) => a - b;
+function circMeanDeg(vals){ let c = 0, s = 0; for(const a of vals){ c += Math.cos(a*D2R); s += Math.sin(a*D2R); } return wrap360(Math.atan2(s, c)*R2D); }
+function circSdDeg(vals){ let c = 0, s = 0; for(const a of vals){ c += Math.cos(a*D2R); s += Math.sin(a*D2R); } const R = Math.hypot(c, s)/vals.length; return Math.sqrt(-2*Math.log(Math.max(1e-12, R)))*R2D; }
+function meanOf(a){ let s = 0; for(const x of a) s += x; return a.length ? s/a.length : NaN; }
+function sdOf(a){ const m = meanOf(a); let s = 0; for(const x of a) s += (x-m)*(x-m); return Math.sqrt(s/Math.max(1, a.length-1)); }
+const sin2deg = d => { const s = Math.sin(d*D2R); return s*s; };
+
+/* ---------- state ---------- */
+const UQ = { res: null, running: false, tab: 'summary', hiClass: null, hidden: {}, catalog: [], opts: {planes: 120, showNP1: true, showNP2: true, showP: true, showT: true, showB: true, cones: true, ens: true, cat: true, bounds: true, grid: true}, hit: null };
+window.UQ = UQ;
+
+/* ---------- Frohlich triangle ---------- */
+const FCLS = [
+  {k:'N',  name:'Normal',            color:'#60a5fa'},
+  {k:'NO', name:'Normal-oblique',    color:'#22d3ee'},
+  {k:'SS', name:'Strike-slip',       color:'#34d399'},
+  {k:'O',  name:'Odd / B-oblique',   color:'#94a3b8'},
+  {k:'TO', name:'Thrust-oblique',    color:'#fb923c'},
+  {k:'T',  name:'Thrust',            color:'#f87171'}
+];
+const FCLS_BY = {}; FCLS.forEach(c => FCLS_BY[c.k] = c);
+function frohThr(){ const v = parseFloat(($('uqThr')||{}).value); return Math.min(80, Math.max(45, isFinite(v) ? v : 60)); }
+// f = [sin^2(plunge P), sin^2(plunge B), sin^2(plunge T)] ; they always sum to 1
+function frohClass(f, thrDeg){
+  const f0 = sin2deg(thrDeg), fN = f[0], fSS = f[1], fT = f[2];
+  if(fN >= f0) return 'N';
+  if(fT >= f0) return 'T';
+  if(fSS >= f0) return 'SS';
+  if(fN >= fT && fN >= fSS) return 'NO';
+  if(fT >= fN && fT >= fSS) return 'TO';
+  return 'O';
+}
+
+/* ---------- mechanisms ---------- */
+const nsOf = (s,d,r) => FMS.sdrToNS(s, d, r);
+function axesOf(n, s){
+  const T = lowerVec(nrm3([n[0]+s[0], n[1]+s[1], n[2]+s[2]]));
+  const P = lowerVec(nrm3([n[0]-s[0], n[1]-s[1], n[2]-s[2]]));
+  const B = lowerVec(nrm3(cross3(n, s)));
+  return {P, T, B};
+}
+// Build a fully characterised sample; NP1 is the plane whose normal is closest to the reference NP1 normal.
+function buildSample(s, d, r, refN, extra){
+  const ns = nsOf(s, d, r);
+  let n = ns.n, sv = ns.s;
+  if(refN && Math.abs(dot3(sv, refN)) > Math.abs(dot3(n, refN))){ const t = n; n = sv; sv = t; }
+  const np1 = FMS.nsToSdr(n, sv), np2 = FMS.nsToSdr(sv, n);
+  const ax = axesOf(n, sv);
+  const P = azPl(ax.P), T = azPl(ax.T), B = azPl(ax.B);
+  const f = [sin2deg(P.pl), sin2deg(B.pl), sin2deg(T.pl)];
+  const out = {np1, np2, n, s: sv, P: {...P, v: ax.P}, T: {...T, v: ax.T}, B: {...B, v: ax.B}, f};
+  if(extra) Object.assign(out, extra);
+  return out;
+}
+
+/* ---------- picks & likelihood ---------- */
+function getPicks(){
+  const out = [];
+  rows.forEach((r, i) => {
+    if((r.pol === '+' || r.pol === '−') && isFinite(r.az) && isFinite(r.tk)){
+      out.push({idx: i, id: r.id, az: r.az, tk: r.tk, o: r.pol === '+' ? 1 : -1, x: FMS.rayVecNED(r.az, r.tk)});
+    }
+  });
+  return out;
+}
+function logLik(n, s, picks, eps, sig){
+  let ll = 0;
+  for(let i = 0; i < picks.length; i++){
+    const p = picks[i], x = p.x;
+    const A = 2*dot3(s, x)*dot3(n, x);
+    let q = eps + (1 - 2*eps)*Phi(p.o*A/sig);
+    if(q < 1e-12) q = 1e-12;
+    ll += Math.log(q);
+  }
+  return ll;
+}
+function evalSDR(s, d, r, picks, eps, sig){ const ns = nsOf(s, d, r); return logLik(ns.n, ns.s, picks, eps, sig); }
+
+function coarseCells(picks, eps, sig){
+  const cells = [];
+  for(let s = 0; s < 360; s += 15) for(let d = 10; d <= 90; d += 10) for(let r = -180; r < 180; r += 20){
+    cells.push({s, d, r, ll: evalSDR(s, d, r, picks, eps, sig)});
+  }
+  cells.sort((a,b) => b.ll - a.ll);
+  return cells;
+}
+function refineLocal(st, picks, eps, sig){
+  let cur = {s: wrap360(st.s), d: Math.min(90, Math.max(1, st.d)), r: wrap180(st.r)};
+  cur.ll = evalSDR(cur.s, cur.d, cur.r, picks, eps, sig);
+  const moves = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1],[1,0,1],[-1,0,-1],[1,0,-1],[-1,0,1]];
+  for(const step of [8, 4, 2, 1]){
+    for(let it = 0; it < 40; it++){
+      let better = null;
+      for(const m of moves){
+        const s = wrap360(cur.s + m[0]*step), d = Math.min(90, Math.max(1, cur.d + m[1]*step)), r = wrap180(cur.r + m[2]*step);
+        const ll = evalSDR(s, d, r, picks, eps, sig);
+        if(ll > cur.ll + 1e-9 && (!better || ll > better.ll)) better = {s, d, r, ll};
+      }
+      if(!better) break;
+      cur = better;
+    }
+  }
+  return cur;
+}
+function solveML(picks, eps, sig, extraStarts){
+  const cells = coarseCells(picks, eps, sig);
+  const starts = cells.slice(0, 4).concat(extraStarts || []);
+  let best = null;
+  for(const st of starts){ const c = refineLocal(st, picks, eps, sig); if(!best || c.ll > best.ll) best = c; }
+  return best;
+}
+
+/* ---------- samplers ---------- */
+const tick = () => new Promise(r => setTimeout(r, 0));
+function setProgress(f, msg){
+  const bar = $('uqBar'); if(bar) bar.style.width = (100*Math.min(1, Math.max(0, f))).toFixed(1) + '%';
+  if(msg != null && $('uqStatus')) $('uqStatus').textContent = msg;
+}
+
+async function runBootstrap(picks, ref, o, rng){
+  const out = [];
+  let t0 = performance.now();
+  for(let b = 0; b < o.N; b++){
+    const rs = []; for(let i = 0; i < picks.length; i++) rs.push(picks[Math.floor(rng()*picks.length)]);
+    const sol = solveML(rs, o.eps, o.sig, [ref]);
+    out.push({s: sol.s, d: sol.d, r: sol.r});
+    if(performance.now() - t0 > 40){ setProgress((b+1)/o.N, `Bootstrap ${b+1}/${o.N}`); await tick(); t0 = performance.now(); if(!UQ.running) return null; }
+  }
+  return {samples: out};
+}
+async function runMonteCarlo(picks, ref, o, rng){
+  const out = [];
+  let t0 = performance.now();
+  for(let b = 0; b < o.N; b++){
+    const pp = picks.map(p => {
+      const az = p.az + o.sigAz*gauss(rng), tk = Math.min(179, Math.max(1, p.tk + o.sigTk*gauss(rng)));
+      const flip = rng() < o.eps;
+      return {az, tk, o: flip ? -p.o : p.o, x: FMS.rayVecNED(az, tk)};
+    });
+    const sol = solveML(pp, o.eps, o.sig, [ref]);
+    out.push({s: sol.s, d: sol.d, r: sol.r});
+    if(performance.now() - t0 > 40){ setProgress((b+1)/o.N, `Monte Carlo ${b+1}/${o.N}`); await tick(); t0 = performance.now(); if(!UQ.running) return null; }
+  }
+  return {samples: out};
+}
+async function runMCMC(picks, ref, o, rng){
+  const nCh = 4, nIter = Math.max(500, Math.round(o.N/nCh)), burn = Math.floor(0.3*nIter);
+  const cells = coarseCells(picks, o.eps, o.sig).slice(0, 60);
+  const keepTotal = Math.min(2000, nCh*(nIter - burn)), thin = Math.max(1, Math.floor(nCh*(nIter - burn)/keepTotal));
+  const logPrior = (d, eps) => Math.log(Math.sin(d*D2R)) + 9*Math.log(1 - eps);          // Haar prior on orientation, eps ~ Beta(1,10)
+  const chains = [];
+  let done = 0, t0 = performance.now();
+  for(let c = 0; c < nCh; c++){
+    const st = cells[Math.floor(rng()*cells.length)];
+    let cur = {s: st.s, d: Math.min(89, st.d), r: st.r, e: Math.min(0.3, Math.max(0.01, o.eps))};
+    cur.ll = evalSDR(cur.s, cur.d, cur.r, picks, cur.e, o.sig); cur.lp = cur.ll + logPrior(cur.d, cur.e);
+    let sS = 10, sD = 6, sR = 10, acc = 0, accWin = 0, accTot = 0, nTot = 0;
+    const tr = {s: [], d: [], r: [], e: [], lp: []};
+    for(let it = 0; it < nIter; it++){
+      let prop;
+      if(rng() < 0.05){                                                                   // swap to the auxiliary plane (same mechanism)
+        const ns = nsOf(cur.s, cur.d, cur.r), aux = FMS.nsToSdr(ns.s, ns.n);
+        prop = {s: aux.strike, d: Math.min(89.9, Math.max(0.1, aux.dip)), r: aux.rake, e: cur.e};
+        prop.ll = evalSDR(prop.s, prop.d, prop.r, picks, prop.e, o.sig); prop.lp = prop.ll + logPrior(prop.d, prop.e);
+        cur = prop; acc++; accWin++;
+      }else{
+        let d2 = cur.d + sD*gauss(rng); if(d2 < 0) d2 = -d2; if(d2 > 90) d2 = 180 - d2;
+        const e2 = cur.e + 0.02*gauss(rng);
+        if(d2 > 0.5 && d2 < 89.9 && e2 > 0.001 && e2 < 0.4){
+          prop = {s: wrap360(cur.s + sS*gauss(rng)), d: d2, r: wrap180(cur.r + sR*gauss(rng)), e: e2};
+          prop.ll = evalSDR(prop.s, prop.d, prop.r, picks, prop.e, o.sig); prop.lp = prop.ll + logPrior(prop.d, prop.e);
+          if(Math.log(rng()) < prop.lp - cur.lp){ cur = prop; acc++; accWin++; }
+        }
+      }
+      nTot++;
+      if(it < burn && (it + 1) % 200 === 0){                                              // adapt step sizes during burn-in
+        const rate = accWin/200; accWin = 0;
+        const f = rate > 0.35 ? 1.2 : (rate < 0.2 ? 0.8 : 1);
+        sS = Math.min(40, Math.max(1, sS*f)); sD = Math.min(25, Math.max(1, sD*f)); sR = Math.min(40, Math.max(1, sR*f));
+      }
+      if(it >= burn){ tr.s.push(cur.s); tr.d.push(cur.d); tr.r.push(cur.r); tr.e.push(cur.e); tr.lp.push(cur.lp); }
+      done++;
+      if(performance.now() - t0 > 40){ setProgress(done/(nCh*nIter), `MCMC chain ${c+1}/${nCh}, iteration ${it+1}/${nIter}`); await tick(); t0 = performance.now(); if(!UQ.running) return null; }
+    }
+    chains.push({tr, rate: acc/nTot});
+  }
+  // thin and pool
+  const samples = [], eps = [];
+  let k = 0;
+  for(const ch of chains){ for(let i = 0; i < ch.tr.s.length; i++){ if((k++) % thin === 0){ samples.push({s: ch.tr.s[i], d: ch.tr.d[i], r: ch.tr.r[i]}); eps.push(ch.tr.e[i]); } } }
+  // Gelman-Rubin R-hat on log-posterior and on sin^2(P plunge) (invariant to the NP1/NP2 ambiguity)
+  const scal = chains.map(ch => ch.tr.s.map((_, i) => { const ns = nsOf(ch.tr.s[i], ch.tr.d[i], ch.tr.r[i]); const P = lowerVec(nrm3([ns.n[0]-ns.s[0], ns.n[1]-ns.s[1], ns.n[2]-ns.s[2]])); return P[2]*P[2]; }));
+  const rhat = arrs => {
+    const m = arrs.length, n = arrs[0].length;
+    const means = arrs.map(meanOf), W = meanOf(arrs.map(a => { const mu = meanOf(a); let s = 0; for(const x of a) s += (x-mu)*(x-mu); return s/(n-1); }));
+    const B = n*sdOf(means)*sdOf(means), V = (n-1)/n*W + B/n;
+    return W > 0 ? Math.sqrt(V/W) : 1;
+  };
+  return {samples, eps, diag: {rhatLP: rhat(chains.map(c => c.tr.lp)), rhatP: rhat(scal), acc: meanOf(chains.map(c => c.rate)), nChains: nCh, nIter, burn, thin}};
+}
+
+/* ---------- summary statistics ---------- */
+const VARS = [
+  {k:'s1', label:'NP1 strike', get: x => x.np1.strike, circ:true, lo:0, hi:360},
+  {k:'d1', label:'NP1 dip',    get: x => x.np1.dip,    circ:false, lo:0, hi:90},
+  {k:'r1', label:'NP1 rake',   get: x => x.np1.rake,   circ:true, lo:-180, hi:180},
+  {k:'s2', label:'NP2 strike', get: x => x.np2.strike, circ:true, lo:0, hi:360},
+  {k:'d2', label:'NP2 dip',    get: x => x.np2.dip,    circ:false, lo:0, hi:90},
+  {k:'r2', label:'NP2 rake',   get: x => x.np2.rake,   circ:true, lo:-180, hi:180},
+  {k:'Paz', label:'P-axis azimuth', get: x => x.P.az, circ:true, lo:0, hi:360},
+  {k:'Ppl', label:'P-axis plunge',  get: x => x.P.pl, circ:false, lo:0, hi:90},
+  {k:'Taz', label:'T-axis azimuth', get: x => x.T.az, circ:true, lo:0, hi:360},
+  {k:'Tpl', label:'T-axis plunge',  get: x => x.T.pl, circ:false, lo:0, hi:90},
+  {k:'Baz', label:'B-axis azimuth', get: x => x.B.az, circ:true, lo:0, hi:360},
+  {k:'Bpl', label:'B-axis plunge',  get: x => x.B.pl, circ:false, lo:0, hi:90}
+];
+function wrapFor(v, val){ return v.lo === -180 ? wrap180(val) : (v.circ ? wrap360(val) : val); }
+function summarizeVar(v, samples, refSample){
+  const vals = samples.map(v.get), refVal = v.get(refSample);
+  let c, offs;
+  if(v.circ){
+    c = circMeanDeg(vals);
+    offs = vals.map(a => wrap180(a - c)).sort(numAsc);
+  }else{
+    c = meanOf(vals); offs = vals.map(a => a - c).sort(numAsc);
+  }
+  const q = p => c + pct(offs, p);
+  const out = {
+    ref: refVal, median: wrapFor(v, q(50)), mean: wrapFor(v, c),
+    lo68: wrapFor(v, q(15.865)), hi68: wrapFor(v, q(84.135)), lo95: wrapFor(v, q(2.5)), hi95: wrapFor(v, q(97.5)),
+    sd: v.circ ? circSdDeg(vals) : sdOf(vals), vals, center: c, offs
+  };
+  if(!v.circ){ out.lo68 = Math.max(v.lo, out.lo68); out.hi95 = Math.min(v.hi, out.hi95); }
+  return out;
+}
+function coneRadii(samples, key, refAxis){
+  const a = samples.map(x => axAngle(x[key].v, refAxis)).sort(numAsc);
+  return {r68: pct(a, 68.27), r95: pct(a, 95), med: pct(a, 50)};
+}
+function azimuthalGap(picks){
+  if(!picks.length) return 360;
+  const az = picks.map(p => wrap360(p.az)).sort(numAsc);
+  let gap = 0;
+  for(let i = 0; i < az.length; i++){ const nx = i + 1 < az.length ? az[i+1] : az[0] + 360; gap = Math.max(gap, nx - az[i]); }
+  return gap;
+}
+// Greedy clustering of the ensemble in (P,T) axis space -> solution families (ambiguity / multimodality)
+function findModes(samples){
+  const N = Math.min(samples.length, 700), step = Math.max(1, Math.floor(samples.length/N));
+  const sub = []; for(let i = 0; i < samples.length; i += step) sub.push(i);
+  const used = new Array(sub.length).fill(false), modes = [];
+  const near = (a, b) => axAngle(samples[a].P.v, samples[b].P.v) < 25 && axAngle(samples[a].T.v, samples[b].T.v) < 25;
+  for(let rep = 0; rep < 4; rep++){
+    let best = -1, bestC = 0;
+    for(let i = 0; i < sub.length; i++){ if(used[i]) continue; let c = 0; for(let j = 0; j < sub.length; j++) if(!used[j] && near(sub[i], sub[j])) c++; if(c > bestC){ bestC = c; best = i; } }
+    if(best < 0 || bestC < 2) break;
+    const members = [];
+    for(let j = 0; j < sub.length; j++) if(!used[j] && near(sub[best], sub[j])){ used[j] = true; members.push(sub[j]); }
+    modes.push({rep: samples[sub[best]], n: members.length, frac: members.length/sub.length});
+  }
+  return modes;
+}
+
+function analyse(raw, picks, ref, o){
+  const refN = ref.n;
+  const samples = raw.samples.map(m => buildSample(m.s, m.d, m.r, refN));
+  const refSample = buildSample(ref.s, ref.d, ref.r, refN);
+  const thr = frohThr();
+  samples.forEach(x => x.cls = frohClass(x.f, thr));
+  refSample.cls = frohClass(refSample.f, thr);
+  const stats = {}; VARS.forEach(v => stats[v.k] = summarizeVar(v, samples, refSample));
+  const cones = {P: coneRadii(samples, 'P', refSample.P.v), T: coneRadii(samples, 'T', refSample.T.v), B: coneRadii(samples, 'B', refSample.B.v)};
+  // class probabilities
+  const cnt = {}; FCLS.forEach(c => cnt[c.k] = 0); samples.forEach(x => cnt[x.cls]++);
+  const probs = {}; FCLS.forEach(c => probs[c.k] = cnt[c.k]/samples.length);
+  let H = 0; FCLS.forEach(c => { const p = probs[c.k]; if(p > 0) H -= p*Math.log(p); });
+  const fMean = [0, 1, 2].map(i => meanOf(samples.map(x => x.f[i])));
+  const fSorted = [0, 1, 2].map(i => samples.map(x => x.f[i]).sort(numAsc));
+  const fRange = fSorted.map(a => [pct(a, 2.5), pct(a, 97.5)]);
+  // station consistency (fraction of ensemble mechanisms that predict the observed polarity)
+  const stn = picks.map(p => {
+    let ok = 0;
+    for(const x of samples){
+      const A = 2*dot3(x.s, p.x)*dot3(x.n, p.x);
+      if(Math.abs(A) < 1e-3) ok += 0.5; else if(A*p.o > 0) ok += 1;
+    }
+    const Aref = 2*dot3(refSample.s, p.x)*dot3(refSample.n, p.x);
+    return {id: p.id, o: p.o, az: p.az, tk: p.tk, cons: ok/samples.length, Aref};
+  });
+  let misfit = 0, nodal = 0;
+  stn.forEach(s => { if(Math.abs(s.Aref) < 1e-3) nodal++; else if(s.Aref*s.o < 0) misfit++; });
+  const modes = findModes(samples);
+  const gap = azimuthalGap(picks);
+  const u = 0.5*(cones.P.r68 + cones.T.r68);
+  const fm = picks.length ? misfit/picks.length : 1;
+  let grade = 'D';
+  if(u <= 10 && fm <= 0.05 && picks.length >= 12) grade = 'A';
+  else if(u <= 20 && fm <= 0.10 && picks.length >= 8) grade = 'B';
+  else if(u <= 35 && fm <= 0.20) grade = 'C';
+  const res = {method: o.method, opts: o, n: samples.length, samples, ref: refSample, stats, cones, probs, counts: cnt, entropy: H, fMean, fRange, stn, misfit, nodal, nPicks: picks.length, gap, modes, grade, uMean: u, diag: raw.diag || null, epsPost: raw.eps || null, thr, sig: picks.map(p => p.idx).join(',') + '|' + picks.map(p => p.o).join('') };
+  res.notes = interpret(res, picks);
+  return res;
+}
+
+function interpret(R, picks){
+  const notes = [];
+  const add = (lvl, txt) => notes.push({lvl, txt});
+  if(R.nPicks < 8) add('warn', `Only ${R.nPicks} polarity picks: the mechanism is weakly constrained (8+ recommended, 12+ for a robust solution).`);
+  if(R.gap > 180) add('warn', `Azimuthal gap of ${R.gap.toFixed(0)}°: part of the focal sphere has no data, so plane orientations in that direction are poorly resolved.`);
+  const tks = picks.map(p => p.tk > 90 ? 180 - p.tk : p.tk);
+  if(tks.length && Math.max(...tks) < 50) add('warn', 'All stations are at small take-off angles (steep rays): dip and rake are poorly constrained. Stations at larger take-off angles would help.');
+  const bad = R.stn.filter(s => s.cons < 0.5);
+  if(bad.length) add('warn', `Polarity picks that disagree with most of the ensemble (< 50 % consistent): ${bad.map(s => s.id + ' (' + (100*s.cons).toFixed(0) + '%)').join(', ')}. Re-inspect these waveforms.`);
+  else add('ok', 'Every polarity pick is consistent with at least half of the ensemble solutions.');
+  if(R.modes.length > 1 && R.modes[0].frac < 0.8){
+    const m = R.modes[1];
+    add('warn', `Ambiguous solution: ${(100*R.modes[0].frac).toFixed(0)} % of the ensemble in the main family, ${(100*m.frac).toFixed(0)} % in an alternative family (NP1 ${m.rep.np1.strike.toFixed(0)}/${m.rep.np1.dip.toFixed(0)}/${m.rep.np1.rake.toFixed(0)}).`);
+  }else add('ok', `The ensemble forms one solution family (${(100*(R.modes[0] ? R.modes[0].frac : 1)).toFixed(0)} % of samples).`);
+  add(R.uMean <= 20 ? 'ok' : 'warn', `Mean 68 % cone radius of the P and T axes is ${R.uMean.toFixed(1)}° (P ${R.cones.P.r68.toFixed(0)}°, T ${R.cones.T.r68.toFixed(0)}°, B ${R.cones.B.r68.toFixed(0)}°).`);
+  const dom = FCLS.slice().sort((a,b) => R.probs[b.k] - R.probs[a.k]);
+  add(R.probs[dom[0].k] >= 0.8 ? 'ok' : 'warn', `Frohlich class: ${dom[0].name} with ${(100*R.probs[dom[0].k]).toFixed(0)} % probability` + (R.probs[dom[1].k] > 0.05 ? `, alternative ${dom[1].name} ${(100*R.probs[dom[1].k]).toFixed(0)} %.` : '.'));
+  if(R.diag){
+    const bad2 = R.diag.rhatLP > 1.1 || R.diag.rhatP > 1.1;
+    add(bad2 ? 'warn' : 'ok', `MCMC: R-hat ${R.diag.rhatLP.toFixed(2)} (log-posterior), ${R.diag.rhatP.toFixed(2)} (P-axis), acceptance ${(100*R.diag.acc).toFixed(0)} %` + (bad2 ? ' - chains have not converged; increase the number of samples.' : ' - chains agree.'));
+  }
+  if(R.epsPost){
+    const e = R.epsPost.slice().sort(numAsc);
+    add('info', `Inferred polarity-error rate: ${(100*pct(e, 50)).toFixed(1)} % (95 % interval ${(100*pct(e, 2.5)).toFixed(1)}-${(100*pct(e, 97.5)).toFixed(1)} %).`);
+  }
+  if(R.method === 'bootstrap' && R.nPicks < 12) add('info', 'Bootstrap with few stations tends to under-estimate uncertainty; prefer the Bayesian method for small data sets.');
+  if(R.method === 'mc') add('info', 'Monte Carlo propagates the azimuth/take-off/polarity errors you specified; it does not include model (velocity structure) error beyond them.');
+  return notes;
+}
+
+/* ---------- run ---------- */
+function readOpts(){
+  const g = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
+  return {method: $('uqMethod').value, N: Math.max(100, Math.min(200000, Math.round(g('uqN', 2000)))), eps: Math.min(0.3, Math.max(0.001, g('uqEps', 0.05))),
+          sig: Math.max(0.01, g('uqSig', 0.1)), sigAz: Math.max(0, g('uqSigAz', 10)), sigTk: Math.max(0, g('uqSigTk', 5)), seed: Math.round(g('uqSeed', 12345))};
+}
+async function runAnalysis(){
+  if(UQ.running){ UQ.running = false; return; }
+  const picks = getPicks();
+  if(picks.length < 4){ $('uqStatus').textContent = 'Need at least 4 polarity picks (+/−) with azimuth and take-off angle. Load SAC files, compute take-off angles and pick polarities first.'; return; }
+  const o = readOpts();
+  const rng = mulberry32(o.seed);
+  UQ.running = true; $('uqRun').textContent = 'Cancel';
+  try{
+    setProgress(0, 'Finding the reference solution...');
+    await tick();
+    const sol = MANUAL_SOL || FM_SOLUTION;
+    let ref;
+    if(sol && isFinite(sol.strike)){ const ns = nsOf(sol.strike, sol.dip, sol.rake); ref = {s: sol.strike, d: sol.dip, r: sol.rake, n: ns.n}; }
+    else { const m = solveML(picks, o.eps, o.sig); const ns = nsOf(m.s, m.d, m.r); ref = {s: m.s, d: m.d, r: m.r, n: ns.n}; }
+    const t0 = performance.now();
+    let raw;
+    if(o.method === 'mcmc') raw = await runMCMC(picks, ref, o, rng);
+    else if(o.method === 'bootstrap') raw = await runBootstrap(picks, ref, o, rng);
+    else raw = await runMonteCarlo(picks, ref, o, rng);
+    if(!raw){ setProgress(0, 'Cancelled.'); return; }
+    setProgress(1, 'Summarising...'); await tick();
+    UQ.res = analyse(raw, picks, ref, o);
+    UQ.res.refSig = curSig();
+    UQ.res.seconds = (performance.now() - t0)/1000;
+    UQ.hiClass = null;
+    setProgress(1, `Done: ${UQ.res.n} samples in ${UQ.res.seconds.toFixed(1)} s (${o.method === 'mcmc' ? 'Bayesian MCMC' : (o.method === 'bootstrap' ? 'bootstrap' : 'Monte Carlo')}, seed ${o.seed}).`);
+    renderAll();
+  }catch(err){
+    console.error(err); $('uqStatus').textContent = 'Error: ' + err.message;
+  }finally{
+    UQ.running = false; $('uqRun').textContent = 'Run analysis';
+  }
+}
+
+/* ---------- canvas helpers ---------- */
+function prep(canvas, w, h){
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+  canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
+  const c = canvas.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return c;
+}
+function tip(show, html, x, y){
+  const t = $('uqTip'); if(!t) return;
+  if(!show){ t.style.display = 'none'; return; }
+  t.innerHTML = html; t.style.display = 'block';
+  const wrap = $('uqCard').getBoundingClientRect();
+  t.style.left = Math.min(x - wrap.left + 14, wrap.width - 260) + 'px'; t.style.top = (y - wrap.top + 14) + 'px';
+}
+const f1 = x => isFinite(x) ? x.toFixed(1) : '–';
+const f0 = x => isFinite(x) ? x.toFixed(0) : '–';
+const dimmed = x => UQ.hiClass && x.cls !== UQ.hiClass;
+
+/* ---------- Stereonet (equal-area, lower hemisphere) ---------- */
+let stGeom = null;
+function stProj(v, R, cx, cy){
+  const u = lowerVec(v); const th = Math.acos(Math.min(1, Math.max(-1, -u[2])));          // angle from nadir
+  const rr = R*Math.SQRT2*Math.sin(th/2); const az = Math.atan2(u[0], u[1]);
+  return [cx + rr*Math.sin(az), cy - rr*Math.cos(az)];
+}
+function greatCircle(ctx, n, R, cx, cy){
+  let u = cross3(n, [0, 0, 1]); if(Math.hypot(u[0], u[1], u[2]) < 1e-6) u = [1, 0, 0]; u = nrm3(u);
+  const w = nrm3(cross3(n, u));
+  let prev = null; ctx.beginPath();
+  for(let a = 0; a <= 180; a += 3){
+    const t = a*D2R, v = [Math.cos(t)*u[0] + Math.sin(t)*w[0], Math.cos(t)*u[1] + Math.sin(t)*w[1], Math.cos(t)*u[2] + Math.sin(t)*w[2]];
+    const p = stProj(v, R, cx, cy);
+    if(!prev || Math.hypot(p[0]-prev[0], p[1]-prev[1]) > R*0.6) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+    prev = p;
+  }
+  ctx.stroke();
+}
+function smallCircle(ctx, axis, rho, R, cx, cy){
+  const a = nrm3(axis); let e1 = cross3(a, [0, 0, 1]); if(Math.hypot(e1[0], e1[1], e1[2]) < 1e-6) e1 = [1, 0, 0]; e1 = nrm3(e1); const e2 = nrm3(cross3(a, e1));
+  const cr = Math.cos(rho*D2R), sr = Math.sin(rho*D2R); let prev = null; ctx.beginPath();
+  for(let p = 0; p <= 360; p += 4){
+    const t = p*D2R, v = [cr*a[0] + sr*(Math.cos(t)*e1[0] + Math.sin(t)*e2[0]), cr*a[1] + sr*(Math.cos(t)*e1[1] + Math.sin(t)*e2[1]), cr*a[2] + sr*(Math.cos(t)*e1[2] + Math.sin(t)*e2[2])];
+    const q = stProj(v, R, cx, cy);
+    if(!prev || Math.hypot(q[0]-prev[0], q[1]-prev[1]) > R*0.6) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]);
+    prev = q;
+  }
+  ctx.stroke();
+}
+function drawStereoUQ(){
+  const cv = $('uqStereo'); if(!cv) return;
+  const R0 = UQ.res; const size = Math.max(320, Math.min(560, ($('uqPanelAxes').clientWidth || 700) - 10));
+  const ctx = prep(cv, size, size); const cx = size/2, cy = size/2, R = size/2 - 26;
+  ctx.fillStyle = '#0a1220'; ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#0b1424'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*PI); ctx.fill();
+  ctx.strokeStyle = '#2b3b5c'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 2*PI); ctx.stroke();
+  ctx.lineWidth = 1; ctx.strokeStyle = '#18253f';
+  for(const pl of [30, 60]){ const rr = R*Math.SQRT2*Math.sin((90-pl)*D2R/2); ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 2*PI); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R); ctx.stroke();
+  ctx.fillStyle = '#94a3b8'; ctx.font = '12px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('N', cx, cy - R - 8); ctx.fillText('S', cx, cy + R + 16); ctx.fillText('E', cx + R + 12, cy + 4); ctx.fillText('W', cx - R - 12, cy + 4);
+  stGeom = {cx, cy, R, pts: []};
+  if(!R0){ ctx.fillStyle = '#64748b'; ctx.font = '13px system-ui'; ctx.fillText('Run the analysis to see the ensemble.', cx, cy); return; }
+  const S = R0.samples, o = UQ.opts, step = Math.max(1, Math.floor(S.length/o.planes));
+  if(o.showNP1 || o.showNP2){
+    ctx.lineWidth = 1;
+    for(let i = 0; i < S.length; i += step){
+      const x = S[i], dm = dimmed(x), al = dm ? 0.03 : Math.max(0.05, Math.min(0.25, 8/Math.min(S.length/step, 160)));
+      if(o.showNP1){ ctx.strokeStyle = `rgba(52,211,153,${al})`; greatCircle(ctx, x.n, R, cx, cy); }
+      if(o.showNP2){ ctx.strokeStyle = `rgba(167,139,250,${al})`; greatCircle(ctx, x.s, R, cx, cy); }
+    }
+  }
+  const axes = [['P', '#f87171', o.showP], ['T', '#60a5fa', o.showT], ['B', '#34d399', o.showB]];
+  const maxPts = 900, ps = Math.max(1, Math.floor(S.length/maxPts));
+  for(const [k, col, on] of axes){
+    if(!on) continue;
+    for(let i = 0; i < S.length; i += ps){
+      const x = S[i], p = stProj(x[k].v, R, cx, cy); ctx.globalAlpha = dimmed(x) ? 0.06 : 0.45;
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p[0], p[1], 2.2, 0, 2*PI); ctx.fill(); stGeom.pts.push({x: p[0], y: p[1], s: x, k});
+    }
+    ctx.globalAlpha = 1;
+    if(o.cones){
+      const cr = R0.cones[k];
+      ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.setLineDash([]); smallCircle(ctx, R0.ref[k].v, cr.r68, R, cx, cy);
+      ctx.setLineDash([5, 4]); ctx.lineWidth = 1.2; smallCircle(ctx, R0.ref[k].v, cr.r95, R, cx, cy); ctx.setLineDash([]);
+    }
+  }
+  // reference mechanism
+  ctx.lineWidth = 2.6; ctx.strokeStyle = '#10b981'; greatCircle(ctx, R0.ref.n, R, cx, cy);
+  ctx.strokeStyle = '#8b5cf6'; greatCircle(ctx, R0.ref.s, R, cx, cy);
+  for(const [k, col, lab] of [['P', '#ef4444', 'P'], ['T', '#3b82f6', 'T'], ['B', '#10b981', 'B']]){
+    const p = stProj(R0.ref[k].v, R, cx, cy);
+    ctx.fillStyle = col; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 2*PI); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center'; ctx.fillText(lab, p[0], p[1] + 4);
+  }
+  // legend
+  ctx.textAlign = 'left'; ctx.font = '11px system-ui'; let ly = 16;
+  const leg = [['#34d399', 'NP1 (sampled)'], ['#a78bfa', 'NP2 (sampled)'], ['#f87171', 'P axes'], ['#60a5fa', 'T axes'], ['#34d399', 'B axes']];
+  for(const [c, t] of leg){ ctx.fillStyle = c; ctx.fillRect(8, ly - 8, 10, 3); ctx.fillStyle = '#cbd5e1'; ctx.fillText(t, 22, ly - 3); ly += 14; }
+  ctx.fillStyle = '#94a3b8'; ctx.fillText('solid ring = 68 % cone, dashed = 95 %', 8, ly + 2);
+}
+
+/* ---------- histograms ---------- */
+let hGeom = [];
+function drawHists(){
+  const cv = $('uqHist'); if(!cv) return;
+  const R = UQ.res, W = Math.max(520, ($('uqPanelParams').clientWidth || 900) - 6), cols = W > 760 ? 3 : 2, rowsN = Math.ceil(VARS.length/cols);
+  const ph = 150, H = rowsN*ph + 10; const ctx = prep(cv, W, H); ctx.fillStyle = '#0a1220'; ctx.fillRect(0, 0, W, H);
+  hGeom = [];
+  if(!R){ ctx.fillStyle = '#64748b'; ctx.font = '13px system-ui'; ctx.textAlign = 'center'; ctx.fillText('Run the analysis to see the posterior / ensemble distributions.', W/2, H/2); return; }
+  const pw = W/cols;
+  VARS.forEach((v, idx) => {
+    const st = R.stats[v.k], gx = (idx % cols)*pw, gy = Math.floor(idx/cols)*ph;
+    const x0 = gx + 36, x1 = gx + pw - 14, y0 = gy + 24, y1 = gy + ph - 30;
+    // x range (in offset space)
+    const offs = st.offs; let lo = pct(offs, 0.3), hi = pct(offs, 99.7); const padv = Math.max(2, 0.08*(hi - lo)); lo -= padv; hi += padv;
+    if(v.circ){ lo = Math.max(lo, -180); hi = Math.min(hi, 180); } else { lo = Math.max(lo, v.lo - st.center); hi = Math.min(hi, v.hi - st.center); }
+    if(hi - lo < 4){ const m = (hi + lo)/2; lo = m - 2; hi = m + 2; }
+    const nb = 32, bw = (hi - lo)/nb, cnt = new Array(nb).fill(0), cntC = new Array(nb).fill(0);
+    st.vals.forEach((val, i) => {
+      const off = v.circ ? wrap180(val - st.center) : val - st.center; const b = Math.floor((off - lo)/bw);
+      if(b >= 0 && b < nb){ cnt[b]++; if(UQ.hiClass && R.samples[i].cls === UQ.hiClass) cntC[b]++; }
+    });
+    const mx = Math.max(1, ...cnt), N = st.vals.length;
+    const X = off => x0 + (off - lo)/(hi - lo)*(x1 - x0);
+    ctx.fillStyle = '#e5e7eb'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left'; ctx.fillText(v.label, x0, gy + 14);
+    // CI bands
+    const o95a = pct(offs, 2.5), o95b = pct(offs, 97.5), o68a = pct(offs, 15.865), o68b = pct(offs, 84.135);
+    ctx.fillStyle = 'rgba(34,211,238,0.10)'; ctx.fillRect(X(o95a), y0, Math.max(1, X(o95b) - X(o95a)), y1 - y0);
+    ctx.fillStyle = 'rgba(34,211,238,0.14)'; ctx.fillRect(X(o68a), y0, Math.max(1, X(o68b) - X(o68a)), y1 - y0);
+    for(let b = 0; b < nb; b++){
+      const h = cnt[b]/mx*(y1 - y0), bx = x0 + b/nb*(x1 - x0);
+      ctx.fillStyle = 'rgba(96,165,250,0.75)'; ctx.fillRect(bx + 0.5, y1 - h, (x1 - x0)/nb - 1, h);
+      if(UQ.hiClass){ const hc = cntC[b]/mx*(y1 - y0); ctx.fillStyle = FCLS_BY[UQ.hiClass].color; ctx.fillRect(bx + 0.5, y1 - hc, (x1 - x0)/nb - 1, hc); }
+    }
+    ctx.strokeStyle = '#2b3b5c'; ctx.lineWidth = 1; ctx.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0, y1 - y0);
+    // reference & median
+    const refOff = v.circ ? wrap180(st.ref - st.center) : st.ref - st.center, medOff = pct(offs, 50);
+    ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2; if(refOff >= lo && refOff <= hi){ ctx.beginPath(); ctx.moveTo(X(refOff), y0); ctx.lineTo(X(refOff), y1); ctx.stroke(); }
+    ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(X(medOff), y0); ctx.lineTo(X(medOff), y1); ctx.stroke(); ctx.setLineDash([]);
+    // axis labels
+    ctx.fillStyle = '#94a3b8'; ctx.font = '10px ui-monospace, monospace'; ctx.textAlign = 'center';
+    for(let k = 0; k <= 4; k++){ const off = lo + (hi - lo)*k/4; const val = st.center + off; const lbl = v.circ ? (v.lo === -180 ? wrap180(val) : wrap360(val)) : val; ctx.fillText(lbl.toFixed(0), x0 + (x1 - x0)*k/4, y1 + 12); }
+    ctx.fillStyle = '#cbd5e1'; ctx.font = '11px system-ui';
+    ctx.fillText(`${f1(st.median)}°  [${f1(st.lo68)}, ${f1(st.hi68)}]`, (x0 + x1)/2, y1 + 25);
+    hGeom.push({v, st, x0, x1, y0, y1, lo, hi, nb, cnt, N});
+  });
+  ctx.textAlign = 'left'; ctx.font = '11px system-ui'; ctx.fillStyle = '#34d399'; ctx.fillText('— reference solution', W - 330, H - 4); ctx.fillStyle = '#fbbf24'; ctx.fillText('- - median', W - 190, H - 4); ctx.fillStyle = '#22d3ee'; ctx.fillText('shaded: 68 / 95 %', W - 120, H - 4);
+}
+
+/* ---------- Frohlich ternary ---------- */
+let tGeom = null;
+function clipPoly(poly, a, b, c, k){                                                       // keep a*fN + b*fSS + c*fT >= k
+  const out = [];
+  for(let i = 0; i < poly.length; i++){
+    const p = poly[i], q = poly[(i + 1) % poly.length];
+    const gp = a*p[0] + b*p[1] + c*p[2] - k, gq = a*q[0] + b*q[1] + c*q[2] - k;
+    if(gp >= 0) out.push(p);
+    if((gp >= 0) !== (gq >= 0)){ const t = gp/(gp - gq); out.push([p[0] + t*(q[0]-p[0]), p[1] + t*(q[1]-p[1]), p[2] + t*(q[2]-p[2])]); }
+  }
+  return out;
+}
+function regionPoly(key, f0){
+  let poly = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  const cl = (a, b, c, k) => { poly = poly.length ? clipPoly(poly, a, b, c, k) : poly; };
+  if(key === 'N') cl(1, 0, 0, f0);
+  else if(key === 'T') cl(0, 0, 1, f0);
+  else if(key === 'SS') cl(0, 1, 0, f0);
+  else{
+    cl(-1, 0, 0, -f0); cl(0, -1, 0, -f0); cl(0, 0, -1, -f0);
+    if(key === 'NO'){ cl(1, 0, -1, 0); cl(1, -1, 0, 0); }
+    else if(key === 'TO'){ cl(-1, 0, 1, 0); cl(0, -1, 1, 0); }
+    else { cl(0, 1, -1, 0); cl(-1, 1, 0, 0); }
+  }
+  return poly;
+}
+function drawTernary(){
+  const cv = $('uqTern'); if(!cv) return;
+  const R = UQ.res, W = Math.max(380, Math.min(640, ($('uqPanelFroh').clientWidth || 700)*0.62)), H = Math.round(W*0.93);
+  const ctx = prep(cv, W, H); ctx.fillStyle = '#0a1220'; ctx.fillRect(0, 0, W, H);
+  const L = Math.min(W - 110, (H - 100)*2/Math.sqrt(3)), bx = (W - L)/2, by = H - 52, hgt = L*Math.sqrt(3)/2;
+  const VN = [bx, by], VT = [bx + L, by], VS = [bx + L/2, by - hgt];
+  const pt = f => [f[0]*VN[0] + f[1]*VS[0] + f[2]*VT[0], f[0]*VN[1] + f[1]*VS[1] + f[2]*VT[1]];   // f = [fN, fSS, fT]
+  const thr = R ? R.thr : frohThr(), f0 = sin2deg(thr);
+  tGeom = {pt, pts: [], regions: [], legend: []};
+  if(UQ.opts.bounds){
+    for(const c of FCLS){
+      const poly = regionPoly(c.k, f0); if(poly.length < 3) continue;
+      ctx.fillStyle = c.color + (UQ.hiClass === c.k ? '55' : '26'); ctx.beginPath();
+      poly.forEach((p, i) => { const q = pt(p); if(i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(226,232,240,0.45)'; ctx.lineWidth = 1; ctx.stroke();
+      let cxm = 0, cym = 0; poly.forEach(p => { const q = pt(p); cxm += q[0]; cym += q[1]; }); cxm /= poly.length; cym /= poly.length;
+      tGeom.regions.push({k: c.k, poly: poly.map(pt), cx: cxm, cy: cym});
+    }
+  }
+  if(UQ.opts.grid){
+    ctx.strokeStyle = 'rgba(148,163,184,0.18)'; ctx.lineWidth = 1; ctx.fillStyle = '#64748b'; ctx.font = '10px system-ui';
+    for(let g = 0.2; g < 0.99; g += 0.2){
+      let a = pt([g, 1 - g, 0]), b = pt([g, 0, 1 - g]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      a = pt([1 - g, g, 0]); b = pt([0, g, 1 - g]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      a = pt([1 - g, 0, g]); b = pt([0, 1 - g, g]); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      ctx.textAlign = 'center'; const tb = pt([1 - g, 0, g]); ctx.fillText((100*g).toFixed(0) + '%', tb[0], tb[1] + 13);       // T share along the bottom
+      ctx.textAlign = 'right'; const tl = pt([1 - g, g, 0]); ctx.fillText((100*g).toFixed(0) + '%', tl[0] - 6, tl[1] + 3);         // SS share along the left edge
+    }
+  }
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(VN[0], VN[1]); ctx.lineTo(VT[0], VT[1]); ctx.lineTo(VS[0], VS[1]); ctx.closePath(); ctx.stroke();
+  ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#60a5fa'; ctx.fillText('NORMAL (P vertical)', VN[0] + 6, VN[1] + 38);
+  ctx.fillStyle = '#f87171'; ctx.fillText('THRUST (T vertical)', VT[0] - 6, VT[1] + 38);
+  ctx.fillStyle = '#34d399'; ctx.fillText('STRIKE-SLIP (B vertical)', VS[0], VS[1] - 12);
+  if(!R){
+    ctx.fillStyle = '#64748b'; ctx.font = '13px system-ui'; ctx.fillText('Run the analysis, or load a catalog, to plot mechanisms.', W/2, by - hgt/2 - 40);
+  }
+  const drawPt = (f, color, rad, a, shape, rec) => {
+    const p = pt(f); ctx.globalAlpha = a; ctx.fillStyle = color; ctx.beginPath();
+    if(shape === 'dia'){ ctx.moveTo(p[0], p[1] - rad); ctx.lineTo(p[0] + rad, p[1]); ctx.lineTo(p[0], p[1] + rad); ctx.lineTo(p[0] - rad, p[1]); ctx.closePath(); }
+    else ctx.arc(p[0], p[1], rad, 0, 2*PI);
+    ctx.fill(); if(shape === 'dia'){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); } ctx.globalAlpha = 1;
+    if(rec){ rec.x = p[0]; rec.y = p[1]; tGeom.pts.push(rec); }
+  };
+  if(R && UQ.opts.ens){
+    const S = R.samples, ps = Math.max(1, Math.floor(S.length/1200));
+    for(let i = 0; i < S.length; i += ps){ const x = S[i]; if(UQ.hidden[x.cls]) continue; drawPt(x.f, FCLS_BY[x.cls].color, 2.6, dimmed(x) ? 0.08 : 0.4, 'dot', {kind: 'ens', s: x}); }
+  }
+  if(UQ.opts.cat) UQ.catalog.forEach((m, i) => { if(!UQ.hidden[m.cls]) drawPt(m.f, FCLS_BY[m.cls].color, 5, 0.95, 'dia', {kind: 'cat', s: m, i}); });
+  if(R){   // ensemble mean + 95 % box + reference star
+    const mp = pt(R.fMean); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(mp[0] - 7, mp[1]); ctx.lineTo(mp[0] + 7, mp[1]); ctx.moveTo(mp[0], mp[1] - 7); ctx.lineTo(mp[0], mp[1] + 7); ctx.stroke();
+    const rp = pt(R.ref.f); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#0b1220'; ctx.lineWidth = 1.5; ctx.beginPath();
+    for(let k = 0; k < 10; k++){ const rr = k % 2 ? 5 : 11, a = -PI/2 + k*PI/5; const px = rp[0] + rr*Math.cos(a), py = rp[1] + rr*Math.sin(a); if(k) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+    ctx.closePath(); ctx.fill(); ctx.stroke(); tGeom.pts.push({kind: 'ref', x: rp[0], y: rp[1], s: R.ref});
+  }
+  // region labels with probabilities
+  const total = R ? R.n : 0;
+  tGeom.regions.forEach(rg => {
+    const c = FCLS_BY[rg.k], pr = R ? R.probs[rg.k] : null, cc = UQ.catalog.length ? UQ.catalog.filter(m => m.cls === rg.k).length : 0;
+    ctx.textAlign = 'center'; ctx.fillStyle = c.color; ctx.font = 'bold 12px system-ui';
+    let ty = rg.cy - 4; const lines = [c.name]; if(pr != null) lines.push((100*pr).toFixed(0) + ' %'); if(cc) lines.push(`cat: ${cc}`);
+    if(rg.k === 'N') ty = rg.cy - 14; if(rg.k === 'T') ty = rg.cy - 14; if(rg.k === 'SS') ty = rg.cy + 6;
+    lines.forEach((ln, i) => { ctx.font = i === 0 ? 'bold 11px system-ui' : '11px system-ui'; ctx.fillStyle = i === 0 ? c.color : '#e2e8f0'; ctx.fillText(ln, rg.cx, ty + i*13); });
+  });
+  // legend (click to hide / highlight)
+  let ly = 14; ctx.textAlign = 'left';
+  FCLS.forEach(c => {
+    const hid = !!UQ.hidden[c.k], hi = UQ.hiClass === c.k;
+    ctx.globalAlpha = hid ? 0.35 : 1; ctx.fillStyle = c.color; ctx.fillRect(10, ly - 9, 12, 12); if(hi){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.strokeRect(9, ly - 10, 14, 14); }
+    ctx.fillStyle = '#e5e7eb'; ctx.font = '11px system-ui'; ctx.fillText(c.name + (R ? `  ${(100*R.probs[c.k]).toFixed(0)}%` : ''), 28, ly + 1); ctx.globalAlpha = 1;
+    tGeom.legend.push({k: c.k, x: 8, y: ly - 11, w: 150, h: 16}); ly += 18;
+  });
+  ctx.fillStyle = '#94a3b8'; ctx.font = '10px system-ui'; ctx.fillText('click: highlight class · shift-click: hide', 10, ly + 2);
+  ctx.fillText(`thresholds: dominant plunge ≥ ${thr}°`, 10, ly + 15);
+}
+
+function updateFrohSide(){
+  const R = UQ.res, el = $('uqFrohSide'); if(!el) return;
+  let h = '';
+  if(R){
+    const rows_ = FCLS.slice().sort((a,b) => R.probs[b.k] - R.probs[a.k]);
+    h += '<table class="uq-t"><thead><tr><th>Class</th><th>Probability</th><th>Samples</th></tr></thead><tbody>';
+    for(const c of rows_){
+      const p = R.probs[c.k];
+      h += `<tr data-k="${c.k}" class="${UQ.hiClass === c.k ? 'sel' : ''}"><td><span class="sw" style="background:${c.color}"></span>${c.name}</td><td><div class="bar"><i style="width:${(100*p).toFixed(1)}%;background:${c.color}"></i><b>${(100*p).toFixed(1)} %</b></div></td><td>${R.counts[c.k]}</td></tr>`;
+    }
+    h += '</tbody></table>';
+    const dom = rows_[0], refC = FCLS_BY[R.ref.cls];
+    h += `<div class="uq-kv"><span>Reference solution</span><b style="color:${refC.color}">${refC.name}</b>`
+      + `<span>Most probable class</span><b style="color:${dom.color}">${dom.name} (${(100*R.probs[dom.k]).toFixed(0)} %)</b>`
+      + `<span>Class entropy</span><b>${R.entropy.toFixed(2)} nat (0 = unambiguous, ${Math.log(6).toFixed(2)} = max)</b>`
+      + `<span>Mean composition</span><b>N ${(100*R.fMean[0]).toFixed(0)} % · SS ${(100*R.fMean[1]).toFixed(0)} % · T ${(100*R.fMean[2]).toFixed(0)} %</b>`
+      + `<span>95 % ranges</span><b>N ${(100*R.fRange[0][0]).toFixed(0)}–${(100*R.fRange[0][1]).toFixed(0)} · SS ${(100*R.fRange[1][0]).toFixed(0)}–${(100*R.fRange[1][1]).toFixed(0)} · T ${(100*R.fRange[2][0]).toFixed(0)}–${(100*R.fRange[2][1]).toFixed(0)} %</b>`
+      + `<span>Reference plunges</span><b>P ${f0(R.ref.P.pl)}° · B ${f0(R.ref.B.pl)}° · T ${f0(R.ref.T.pl)}°</b></div>`;
+  }
+  if(UQ.catalog.length){
+    const cc = {}; FCLS.forEach(c => cc[c.k] = 0); UQ.catalog.forEach(m => cc[m.cls]++);
+    h += `<div class="small" style="margin-top:10px"><b>Catalog (${UQ.catalog.length} mechanisms)</b></div><table class="uq-t"><tbody>`;
+    FCLS.forEach(c => { if(cc[c.k]) h += `<tr><td><span class="sw" style="background:${c.color}"></span>${c.name}</td><td>${cc[c.k]}</td><td>${(100*cc[c.k]/UQ.catalog.length).toFixed(1)} %</td></tr>`; });
+    h += '</tbody></table>';
+  }
+  if(!R && !UQ.catalog.length) h = '<div class="small">The Frohlich diagram classifies a mechanism by the plunges of its P, B and T axes (sin² of each plunge, which sum to 1). Load a catalog of strike/dip/rake values or run the uncertainty analysis.</div>';
+  el.innerHTML = h;
+  el.querySelectorAll('tr[data-k]').forEach(tr => tr.addEventListener('click', () => { UQ.hiClass = UQ.hiClass === tr.dataset.k ? null : tr.dataset.k; renderAll(); }));
+}
+
+/* ---------- tables & text panels ---------- */
+function renderSummary(){
+  const R = UQ.res, el = $('uqPanelSummary'); if(!el) return;
+  if(!R){ el.innerHTML = '<div class="small">No results yet. Pick polarities, solve (or select a mechanism manually), choose a method and press <b>Run analysis</b>.</div>'; return; }
+  const gcol = {A: '#34d399', B: '#a3e635', C: '#fbbf24', D: '#f87171'}[R.grade];
+  const refs = R.ref;
+  const methodName = R.method === 'mcmc' ? 'Bayesian MCMC' : (R.method === 'bootstrap' ? 'Bootstrap resampling' : 'Monte Carlo perturbation');
+  let h = `<div class="uq-grid"><div class="uq-grade" style="border-color:${gcol};color:${gcol}"><div class="g">${R.grade}</div><div class="small">solution quality</div></div>`
+    + `<div class="uq-kv"><span>Method</span><b>${methodName}, ${R.n} samples</b>`
+    + `<span>Reference NP1 / NP2</span><b>${f0(refs.np1.strike)}/${f0(refs.np1.dip)}/${f0(refs.np1.rake)} &nbsp;|&nbsp; ${f0(refs.np2.strike)}/${f0(refs.np2.dip)}/${f0(refs.np2.rake)}</b>`
+    + `<span>Polarity picks</span><b>${R.nPicks} used, ${R.misfit} misfit, ${R.nodal} on a nodal plane</b>`
+    + `<span>Azimuthal gap</span><b>${R.gap.toFixed(0)}°</b>`
+    + `<span>P / T / B 68 % cone</span><b>${f0(R.cones.P.r68)}° / ${f0(R.cones.T.r68)}° / ${f0(R.cones.B.r68)}° &nbsp;(95 %: ${f0(R.cones.P.r95)}° / ${f0(R.cones.T.r95)}° / ${f0(R.cones.B.r95)}°)</b>`
+    + `<span>Frohlich class</span><b style="color:${FCLS_BY[R.ref.cls].color}">${FCLS_BY[R.ref.cls].name}</b>`
+    + `<span>Settings</span><b>ε ${(100*R.opts.eps).toFixed(1)} %, σ<sub>A</sub> ${R.opts.sig}${R.method === 'mc' ? `, σaz ${R.opts.sigAz}°, σtk ${R.opts.sigTk}°` : ''}, seed ${R.opts.seed}</b></div></div>`;
+  h += '<div class="small" style="margin:10px 0 4px"><b>Automated interpretation</b> <span class="small">(rule-based reliability assistant; no external model is called)</span></div><ul class="uq-notes">';
+  for(const n of R.notes) h += `<li class="${n.lvl}">${n.lvl === 'ok' ? '✔' : (n.lvl === 'warn' ? '⚠' : 'ℹ')} ${n.txt}</li>`;
+  h += '</ul>';
+  if(R.modes.length){
+    h += '<div class="small" style="margin:8px 0 4px"><b>Solution families</b> (clustering of P/T axes within 25°)</div><table class="uq-t"><thead><tr><th>#</th><th>Share</th><th>NP1 strike/dip/rake</th><th>NP2 strike/dip/rake</th><th>Class</th></tr></thead><tbody>';
+    R.modes.forEach((m, i) => { const c = FCLS_BY[m.rep.cls]; h += `<tr><td>${i+1}</td><td>${(100*m.frac).toFixed(0)} %</td><td>${f0(m.rep.np1.strike)} / ${f0(m.rep.np1.dip)} / ${f0(m.rep.np1.rake)}</td><td>${f0(m.rep.np2.strike)} / ${f0(m.rep.np2.dip)} / ${f0(m.rep.np2.rake)}</td><td><span class="sw" style="background:${c.color}"></span>${c.name}</td></tr>`; });
+    h += '</tbody></table>';
+  }
+  el.innerHTML = h;
+}
+function renderParamTable(){
+  const R = UQ.res, el = $('uqParamTable'); if(!el) return;
+  if(!R){ el.innerHTML = ''; return; }
+  let h = '<table class="uq-t"><thead><tr><th>Parameter</th><th>Reference</th><th>Median</th><th>68 % interval</th><th>95 % interval</th><th>σ</th></tr></thead><tbody>';
+  VARS.forEach(v => { const s = R.stats[v.k]; h += `<tr><td>${v.label}</td><td>${f1(s.ref)}°</td><td>${f1(s.median)}°</td><td>${f1(s.lo68)} – ${f1(s.hi68)}</td><td>${f1(s.lo95)} – ${f1(s.hi95)}</td><td>${f1(s.sd)}°</td></tr>`; });
+  h += '</tbody></table><div class="small" style="margin-top:6px">Azimuthal/rake parameters use circular statistics. NP1 is the plane closest to the reference NP1, so the NP1/NP2 labels are consistent across samples. Principal-axis cone radii (68 / 95 %): ';
+  h += ['P', 'T', 'B'].map(k => `${k} ${f1(R.cones[k].r68)}° / ${f1(R.cones[k].r95)}°`).join(' · ') + '.</div>';
+  el.innerHTML = h;
+}
+function renderStations(){
+  const R = UQ.res, el = $('uqPanelStn'); if(!el) return;
+  if(!R){ el.innerHTML = '<div class="small">Run the analysis to see how consistent each polarity pick is with the solution ensemble.</div>'; return; }
+  let h = '<table class="uq-t"><thead><tr><th>Station</th><th>Pol</th><th>Az°</th><th>Take-off°</th><th>Predicted amplitude (ref.)</th><th>Consistency with ensemble</th><th></th></tr></thead><tbody>';
+  R.stn.slice().sort((a,b) => a.cons - b.cons).forEach(s => {
+    const col = s.cons >= 0.9 ? '#34d399' : (s.cons >= 0.5 ? '#fbbf24' : '#f87171'), flag = s.cons >= 0.9 ? 'reliable' : (s.cons >= 0.5 ? 'uncertain' : 'suspect');
+    h += `<tr><td>${s.id}</td><td>${s.o > 0 ? '+' : '−'}</td><td>${f0(s.az)}</td><td>${f0(s.tk)}</td><td>${s.Aref.toFixed(2)}</td><td><div class="bar"><i style="width:${(100*s.cons).toFixed(0)}%;background:${col}"></i><b>${(100*s.cons).toFixed(0)} %</b></div></td><td style="color:${col}">${flag}</td></tr>`;
+  });
+  el.innerHTML = h + '</tbody></table>';
+}
+function curSig(){
+  const picks = getPicks(); const sig = picks.map(p => p.idx).join(',') + '|' + picks.map(p => p.o).join('');
+  const sol = MANUAL_SOL || FM_SOLUTION;
+  return sig + '#' + (sol ? [sol.strike, sol.dip, sol.rake].map(v => v.toFixed(1)).join(',') : '');
+}
+function setStale(){
+  const b = $('uqStale'); if(!b) return;
+  b.style.display = (UQ.res && !UQ.running && UQ.res.refSig !== curSig()) ? 'block' : 'none';
+}
+
+/* ---------- catalog ---------- */
+function addToCatalog(s, d, r, label){
+  const smp = buildSample(s, d, r, null); smp.cls = frohClass(smp.f, frohThr()); smp.label = label || `${s.toFixed(0)}/${d.toFixed(0)}/${r.toFixed(0)}`;
+  UQ.catalog.push(smp);
+}
+function parseCatalog(text){
+  let n = 0;
+  text.split(/\r?\n/).forEach(line => {
+    line = line.trim(); if(!line || /^[#%]/.test(line)) return;
+    const nums = line.split(/[\s,;\t]+/).map(parseFloat).filter(isFinite);
+    if(nums.length >= 3 && nums[1] >= 0 && nums[1] <= 90.0001){ addToCatalog(nums[0], nums[1], nums[2]); n++; }
+  });
+  return n;
+}
+
+/* ---------- UI wiring ---------- */
+function renderAll(){
+  setTabs();
+  renderSummary(); renderParamTable(); renderStations();
+  if(UQ.tab === 'params') drawHists();
+  if(UQ.tab === 'axes') drawStereoUQ();
+  if(UQ.tab === 'froh'){ drawTernary(); updateFrohSide(); }
+  const hasRes = !!UQ.res;
+  ['uqExportCSV', 'uqExportTxt', 'uqPNG'].forEach(id => { const b = $(id); if(b) b.disabled = !hasRes; });
+  setStale();
+}
+function setTabs(){
+  document.querySelectorAll('#uqTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === UQ.tab));
+  document.querySelectorAll('#uqCard .uq-panel').forEach(p => p.style.display = p.dataset.t === UQ.tab ? 'block' : 'none');
+}
+function pngOf(canvas, name){ const a = document.createElement('a'); a.href = canvas.toDataURL('image/png'); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => document.body.removeChild(a), 0); }
+function init(){
+  if(!$('uqCard')) return;
+  $('uqRun').addEventListener('click', runAnalysis);
+  $('uqMethod').addEventListener('change', () => { const m = $('uqMethod').value; $('uqMcOnly').style.display = m === 'mc' ? 'flex' : 'none'; $('uqN').value = m === 'mcmc' ? 20000 : 500; });
+  document.querySelectorAll('#uqTabs button').forEach(b => b.addEventListener('click', () => { UQ.tab = b.dataset.t; renderAll(); }));
+  $('uqThr').addEventListener('change', () => {
+    const thr = frohThr();
+    if(UQ.res){ UQ.res.thr = thr; UQ.res.samples.forEach(x => x.cls = frohClass(x.f, thr)); UQ.res.ref.cls = frohClass(UQ.res.ref.f, thr); UQ.res.modes.forEach(m => m.rep.cls = frohClass(m.rep.f, thr));
+      const cnt = {}; FCLS.forEach(c => cnt[c.k] = 0); UQ.res.samples.forEach(x => cnt[x.cls]++); UQ.res.counts = cnt; FCLS.forEach(c => UQ.res.probs[c.k] = cnt[c.k]/UQ.res.n);
+      let H = 0; FCLS.forEach(c => { const p = UQ.res.probs[c.k]; if(p > 0) H -= p*Math.log(p); }); UQ.res.entropy = H; UQ.res.notes = interpret(UQ.res, getPicks()); }
+    UQ.catalog.forEach(m => m.cls = frohClass(m.f, thr)); renderAll();
+  });
+  [['uqOptPlanes', 'planes'], ['uqOptNP1', 'showNP1'], ['uqOptNP2', 'showNP2'], ['uqOptP', 'showP'], ['uqOptT', 'showT'], ['uqOptB', 'showB'], ['uqOptCones', 'cones'], ['uqOptEns', 'ens'], ['uqOptCat', 'cat'], ['uqOptBounds', 'bounds'], ['uqOptGrid', 'grid']].forEach(([id, key]) => {
+    const el = $(id); if(!el) return;
+    el.addEventListener('input', () => { UQ.opts[key] = el.type === 'checkbox' ? el.checked : parseInt(el.value); renderAll(); });
+  });
+  $('uqCatFile').addEventListener('change', async e => { const f = e.target.files[0]; if(!f) return; const n = parseCatalog(await f.text()); $('uqStatus').textContent = `Catalog: ${n} mechanisms loaded from ${f.name}.`; e.target.value = ''; UQ.tab = 'froh'; renderAll(); });
+  $('uqCatAdd').addEventListener('click', () => {
+    const sol = MANUAL_SOL || FM_SOLUTION; if(!sol){ $('uqStatus').textContent = 'No current solution to add.'; return; }
+    addToCatalog(sol.strike, sol.dip, sol.rake, 'current'); UQ.tab = 'froh'; renderAll(); $('uqStatus').textContent = `Added ${sol.strike.toFixed(0)}/${sol.dip.toFixed(0)}/${sol.rake.toFixed(0)} to the catalog (${UQ.catalog.length}).`;
+  });
+  $('uqCatClear').addEventListener('click', () => { UQ.catalog = []; renderAll(); });
+  $('uqExportCSV').addEventListener('click', () => {
+    const R = UQ.res; if(!R) return;
+    const L = ['np1_strike,np1_dip,np1_rake,np2_strike,np2_dip,np2_rake,P_az,P_pl,T_az,T_pl,B_az,B_pl,fN,fSS,fT,class'];
+    R.samples.forEach(x => L.push([x.np1.strike, x.np1.dip, x.np1.rake, x.np2.strike, x.np2.dip, x.np2.rake, x.P.az, x.P.pl, x.T.az, x.T.pl, x.B.az, x.B.pl, x.f[0], x.f[1], x.f[2]].map(v => v.toFixed(3)).join(',') + ',' + x.cls));
+    downloadFile('uncertainty_samples.csv', L.join('\n'));
+  });
+  $('uqExportTxt').addEventListener('click', () => {
+    const R = UQ.res; if(!R) return; const L = [];
+    L.push('# FMSAC uncertainty summary'); L.push(`# method=${R.method} samples=${R.n} picks=${R.nPicks} misfit=${R.misfit} gap=${R.gap.toFixed(0)} grade=${R.grade}`);
+    L.push('parameter\treference\tmedian\tlo68\thi68\tlo95\thi95\tsigma');
+    VARS.forEach(v => { const s = R.stats[v.k]; L.push([v.label, s.ref, s.median, s.lo68, s.hi68, s.lo95, s.hi95, s.sd].map((x, i) => i ? x.toFixed(2) : x).join('\t')); });
+    L.push(''); L.push('Frohlich class\tprobability'); FCLS.forEach(c => L.push(`${c.name}\t${(100*R.probs[c.k]).toFixed(2)} %`));
+    L.push(''); L.push('station\tpolarity\tconsistency'); R.stn.forEach(s => L.push(`${s.id}\t${s.o > 0 ? '+' : '-'}\t${(100*s.cons).toFixed(1)} %`));
+    downloadFile('uncertainty_summary.txt', L.join('\n'));
+  });
+  $('uqPNG').addEventListener('click', () => { const cv = UQ.tab === 'axes' ? $('uqStereo') : (UQ.tab === 'froh' ? $('uqTern') : (UQ.tab === 'params' ? $('uqHist') : null)); if(cv) pngOf(cv, 'uq_' + UQ.tab + '.png'); else $('uqStatus').textContent = 'Open the Parameters, Axes or Frohlich tab to export its figure.'; });
+
+  /* interactivity: stereonet hover, histogram hover, ternary hover / legend click */
+  const rel = (cv, e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  $('uqStereo').addEventListener('mousemove', e => {
+    if(!stGeom || !UQ.res) return; const [x, y] = rel($('uqStereo'), e); let best = null, bd = 9;
+    for(const p of stGeom.pts){ const d = Math.hypot(p.x - x, p.y - y); if(d < bd){ bd = d; best = p; } }
+    if(best){ const s = best.s; tip(true, `<b>${best.k}-axis sample</b><br>az ${f0(s[best.k].az)}° plunge ${f0(s[best.k].pl)}°<br>NP1 ${f0(s.np1.strike)}/${f0(s.np1.dip)}/${f0(s.np1.rake)}<br>class ${FCLS_BY[s.cls].name}`, e.clientX, e.clientY); } else tip(false);
+  });
+  $('uqStereo').addEventListener('mouseleave', () => tip(false));
+  $('uqHist').addEventListener('mousemove', e => {
+    const [x, y] = rel($('uqHist'), e); const g = hGeom.find(g => x >= g.x0 && x <= g.x1 && y >= g.y0 && y <= g.y1);
+    if(!g){ tip(false); return; }
+    const b = Math.min(g.nb - 1, Math.max(0, Math.floor((x - g.x0)/(g.x1 - g.x0)*g.nb))), bw = (g.hi - g.lo)/g.nb, a = g.st.center + g.lo + b*bw, c = a + bw, wr = v => g.v.circ ? (g.v.lo === -180 ? wrap180(v) : wrap360(v)) : v;
+    tip(true, `<b>${g.v.label}</b><br>${f1(wr(a))}° – ${f1(wr(c))}°<br>probability ${(100*g.cnt[b]/g.N).toFixed(1)} % (${g.cnt[b]} samples)`, e.clientX, e.clientY);
+  });
+  $('uqHist').addEventListener('mouseleave', () => tip(false));
+  $('uqTern').addEventListener('mousemove', e => {
+    if(!tGeom) return; const [x, y] = rel($('uqTern'), e); let best = null, bd = 10;
+    for(const p of tGeom.pts){ const d = Math.hypot(p.x - x, p.y - y); if(d < bd){ bd = d; best = p; } }
+    if(best){ const s = best.s; tip(true, `<b>${best.kind === 'ref' ? 'Reference solution' : (best.kind === 'cat' ? 'Catalog ' + (s.label || '') : 'Ensemble sample')}</b><br>NP1 ${f0(s.np1.strike)}/${f0(s.np1.dip)}/${f0(s.np1.rake)}<br>plunges P ${f0(s.P.pl)}° B ${f0(s.B.pl)}° T ${f0(s.T.pl)}°<br>N ${(100*s.f[0]).toFixed(0)} % · SS ${(100*s.f[1]).toFixed(0)} % · T ${(100*s.f[2]).toFixed(0)} %<br><span style="color:${FCLS_BY[s.cls].color}">${FCLS_BY[s.cls].name}</span>`, e.clientX, e.clientY); } else tip(false);
+  });
+  $('uqTern').addEventListener('mouseleave', () => tip(false));
+  $('uqTern').addEventListener('click', e => {
+    if(!tGeom) return; const [x, y] = rel($('uqTern'), e);
+    const lg = tGeom.legend.find(l => x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h);
+    if(lg){ if(e.shiftKey) UQ.hidden[lg.k] = !UQ.hidden[lg.k]; else UQ.hiClass = UQ.hiClass === lg.k ? null : lg.k; renderAll(); return; }
+    const rg = tGeom.regions.find(r => { let inside = false; const P = r.poly; for(let i = 0, j = P.length - 1; i < P.length; j = i++){ if(((P[i][1] > y) !== (P[j][1] > y)) && (x < (P[j][0] - P[i][0])*(y - P[i][1])/(P[j][1] - P[i][1]) + P[i][0])) inside = !inside; } return inside; });
+    if(rg){ UQ.hiClass = UQ.hiClass === rg.k ? null : rg.k; renderAll(); }
+  });
+  window.addEventListener('resize', () => { if(UQ.res || UQ.catalog.length) renderAll(); });
+  setInterval(setStale, 1500);
+  renderAll();
+}
+window.UQ_API = {getPicks, solveML, buildSample, frohClass, analyse, runAnalysis, Phi, logLik, nsOf, axesOf, readOpts, parseCatalog};
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
+
+</body>
+</html>
